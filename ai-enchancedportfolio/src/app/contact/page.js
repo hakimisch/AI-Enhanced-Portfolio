@@ -2,9 +2,10 @@ import Navbar from "components/Navbar";
 
 export default function Contact() {
     return (
-        
-      <div className="p-8 max-w-xl mx-auto">
+      <div>
         <Navbar />
+        <div className="p-8 max-w-xl mx-auto">
+        
         <h2 className="text-3xl font-semibold mb-4">Contact</h2>
         <p className="text-gray-600 mb-6">
           This is a placeholder. In the future, you&apos;ll be able to contact the artist or submit inquiries here.
@@ -37,5 +38,8 @@ export default function Contact() {
           </button>
         </form>
       </div>
+
+      </div>
+      
     )
   }

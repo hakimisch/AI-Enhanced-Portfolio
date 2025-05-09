@@ -2,8 +2,9 @@ import Navbar from 'components/Navbar';
 
 export default function Home() {
   return (
-    <div className="p-8">
-            <Navbar />
+    <div>
+      <Navbar />
+      <div className="p-8">
             <h2 className="text-3xl font-semibold mb-4">Featured Projects</h2>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white shadow p-4 rounded">
@@ -14,5 +15,7 @@ export default function Home() {
               {/* Add more cards here or loop over real data later */}
             </div>
           </div>
+    </div>
+    
   );
 }

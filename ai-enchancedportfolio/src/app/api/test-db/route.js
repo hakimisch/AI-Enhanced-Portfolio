@@ -3,7 +3,7 @@ import clientPromise from '../../../../libs/mongodb';
 export async function GET() {
     try {
       const client = await clientPromise;
-      const db = client.db("users");
+      const db = client.db("portfolio");
       const collections = await db.collections();
       return new Response(JSON.stringify({ collections: collections.map(c => c.collectionName) }), {
         status: 200,
