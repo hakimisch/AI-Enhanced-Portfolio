@@ -1,9 +1,13 @@
+// src/app/auth/register/page..js
+
 "use client";
 
 import { useState } from "react";
+import Navbar from "components/Navbar";
 
 export default function Register() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,32 +21,30 @@ export default function Register() {
       return;
     }
 
-    // Send the registration data to the API route
     try {
-      const response = await fetch("/api/auth/register", {
+      const res = await fetch("/api/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, username, password }),
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (response.ok) {
-        setSuccess(true);
-        setError(""); // Clear error if registration is successful
-      } else {
-        setSuccess(false);
+      if (!res.ok) {
         setError(data.error || "Failed to register");
+        setSuccess(false);
+      } else {
+        setSuccess(true);
+        setError("");
       }
-    } catch (error) {
-      console.error(error);
-      setError("Something went wrong. Please try again later.");
+    } catch (err) {
+      setError("Something went wrong");
     }
   };
 
   return (
+    <div>
+      <Navbar />
     <div className="min-h-screen flex justify-center items-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
         <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">Register</h2>
@@ -50,15 +52,25 @@ export default function Register() {
         {success && <p className="text-green-500 text-sm mb-4">Registration successful!</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
+            <label htmlFor="username" className="block text-gray-700">Username</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+            />
+          </div>
+          <div className="mb-4">
             <label htmlFor="email" className="block text-gray-700">Email</label>
             <input
               type="email"
               id="email"
-              name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
             />
           </div>
           <div className="mb-4">
@@ -66,11 +78,10 @@ export default function Register() {
             <input
               type="password"
               id="password"
-              name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
             />
           </div>
           <div className="mb-4">
@@ -78,16 +89,15 @@ export default function Register() {
             <input
               type="password"
               id="confirmPassword"
-              name="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
             />
           </div>
           <button
             type="submit"
-            className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Register
           </button>
@@ -98,6 +108,7 @@ export default function Register() {
           </p>
         </div>
       </div>
+    </div>
     </div>
   );
 }

@@ -1,24 +1,42 @@
+// src/app/auth/login/page.js
+
 "use client";
 
 import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Navbar from "components/Navbar";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    // Here you would typically call an API to authenticate the user
-    if (email === "admin@example.com" && password === "password") {
-      // Simulating a successful login
-      alert("Login successful!");
-    } else {
-      setError("Invalid credentials");
-    }
-  };
+  e.preventDefault();
+  setError("");
+
+  const res = await signIn("credentials", {
+    redirect: false,
+    email,
+    password,
+  });
+
+  console.log("signIn response:", res); // <-- See error reason
+
+  if (res.error) {
+    setError(res.error); // You can customize based on the error message
+  } else {
+    router.push("/admin");
+  }
+};
 
   return (
+    <div>
+      <Navbar />
+
+    
     <div className="min-h-screen flex justify-center items-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
         <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">Login</h2>
@@ -29,11 +47,10 @@ export default function Login() {
             <input
               type="email"
               id="email"
-              name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
             />
           </div>
           <div className="mb-4">
@@ -41,16 +58,15 @@ export default function Login() {
             <input
               type="password"
               id="password"
-              name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
             />
           </div>
           <button
             type="submit"
-            className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Login
           </button>
@@ -61,6 +77,7 @@ export default function Login() {
           </p>
         </div>
       </div>
+    </div>
     </div>
   );
 }

@@ -1,61 +1,51 @@
-// src/app/api/auth/register/route.js
-import bcrypt from 'bcryptjs';
-import mongoose from 'mongoose';
-import User from '@/app/models/User';
+// src/app/api/register/route.js
+import User from "@/app/models/User";
+import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 
-// Make sure to connect to MongoDB
 const connectToDb = async () => {
-  if (mongoose.connection.readyState >= 1) return;
-  await mongoose.connect(process.env.MONGODB_URI);
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+  }
 };
 
 export async function POST(req) {
   try {
-    const { email, password } = await req.json();
+    const { email, username, password } = await req.json();
 
-    // Generate a unique userId
-    const userId = crypto.randomUUID();
-
-    // Validate input
-    if (!email || !password) {
-      return new Response(
-        JSON.stringify({ error: 'Email and password are required.' }),
-        { status: 400 }
-      );
+    if (!email || !username || !password) {
+      return new Response(JSON.stringify({ error: "All fields are required" }), { status: 400 });
     }
 
     await connectToDb();
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return new Response(
-        JSON.stringify({ error: 'User already exists with this email.' }),
-        { status: 409 }
-      );
+      return new Response(JSON.stringify({ error: "User already exists" }), { status: 400 });
     }
 
-    // Hash the password before saving
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user and save to DB
     const newUser = new User({
+      userId: uuidv4(),  // ✅ Include userId
       email,
+      username,
       password: hashedPassword,
     });
 
     await newUser.save();
 
-    
-    return new Response(
-      JSON.stringify({ message: 'User registered successfully' }),
-      { status: 201 }
-    );
+    return new Response(JSON.stringify({ message: "User registered successfully" }), {
+      status: 201,
+    });
   } catch (error) {
-    console.error('Error during registration:', error);
-    return new Response(
-      JSON.stringify({ error: 'Failed to register user.' }),
-      { status: 500 }
-    );
+    console.error("Registration error:", error);
+    return new Response(JSON.stringify({ error: "Registration failed" }), {
+      status: 500,
+    });
   }
 }

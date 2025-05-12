@@ -1,3 +1,4 @@
+// src/app/admin/artworks/page.js
 "use client"
 
 export default function AdminArtwork() {
