@@ -18,10 +18,10 @@ const uploadToCloudinary = (buffer) => {
       { resource_type: "image" },
       (error, result) => {
         if (error) return reject(error);
-        resolve(result);
+        resolve(result); // result should contain width & height
       }
     );
-    stream.end(buffer); // This actually sends the image buffer to Cloudinary
+    stream.end(buffer);
   });
 };
 
@@ -31,6 +31,7 @@ const connectToDb = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
   }
 };
+
 
 export async function POST(req) {
   try {
@@ -43,18 +44,19 @@ export async function POST(req) {
       return new Response("No image provided", { status: 400 });
     }
 
-    // ✅ Create buffer from file
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // ✅ Upload buffer to Cloudinary
     const uploadRes = await uploadToCloudinary(buffer);
+    console.log("Cloudinary response:", uploadRes);
 
-    // ✅ Save to MongoDB
     await connectToDb();
     const newArtwork = await Artwork.create({
       title,
       artistName,
       imageUrl: uploadRes.secure_url,
+      width: uploadRes.width,
+      height: uploadRes.height,
+      publicId: uploadRes.public_id, // ✅ Only here
     });
 
     return new Response(JSON.stringify(newArtwork), { status: 201 });
