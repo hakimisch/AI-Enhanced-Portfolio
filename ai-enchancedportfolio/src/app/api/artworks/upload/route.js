@@ -1,6 +1,4 @@
 import { v2 as cloudinary } from "cloudinary";
-import { writeFile } from "fs/promises";
-import path from "path";
 import Artwork from "@/app/models/Artwork";
 import mongoose from "mongoose";
 

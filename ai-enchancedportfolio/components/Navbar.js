@@ -20,6 +20,7 @@ export default function Navbar() {
         <Link href="/artworks" className="text-gray-700 hover:text-blue-500">My Artworks</Link>
         <Link href="/about" className="text-gray-700 hover:text-blue-500">About</Link>
         <Link href="/contact" className="text-gray-700 hover:text-blue-500">Contact</Link>
+        <Link href="/e-commerce" className="text-gray-700 hover:text-blue-500">Merchandise</Link>
 
         {isAdmin && (
           <Link href="/admin" className="text-gray-700 hover:text-blue-500">Admin</Link>
