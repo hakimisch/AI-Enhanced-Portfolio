@@ -4,12 +4,37 @@ import dbConnect from '@/app/libs/mongoose';
 import Product from '@/app/models/Product';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+// --- GET: Fetch products with optional search/filter ---
+export async function GET(req) {
   await dbConnect();
-  const products = await Product.find();
-  return NextResponse.json(products);
+
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get('search');
+  const category = searchParams.get('category');
+  const min = searchParams.get('min');
+  const max = searchParams.get('max');
+
+  const filter = {};
+  if (search) filter.name = { $regex: search, $options: 'i' };
+  if (category) filter.category = category;
+  if (min || max) {
+    filter.price = {};
+    if (min) filter.price.$gte = Number(min);
+    if (max) filter.price.$lte = Number(max);
+  }
+
+  try {
+    const products = await Product.find(filter);
+    return NextResponse.json(products);
+  } catch (err) {
+    console.error('GET /api/products error:', err.message);
+    return new NextResponse(JSON.stringify({ message: err.message }), {
+      status: 500,
+    });
+  }
 }
 
+// --- POST: Create a new product ---
 export async function POST(req) {
   await dbConnect();
   try {

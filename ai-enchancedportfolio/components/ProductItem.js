@@ -1,7 +1,23 @@
 /* eslint-disable @next/next/no-img-element */
-import Link from 'next/link';
-import React from 'react';
-export default function ProductItem({ product, addToCartHandler }) {
+/*ai-enchancedportfolio/components/ProductItem.js*/
+
+"use client";
+import Link from "next/link";
+import { useStore } from "@/app/context/StoreContext";
+
+export default function ProductItem({ product }) {
+  const { state, dispatch } = useStore();
+
+  const addToCartHandler = () => {
+    const existItem = state.cart.cartItems.find((x) => x._id === product._id);
+    const quantity = existItem ? existItem.quantity + 1 : 1;
+
+    dispatch({
+      type: "CART_ADD_ITEM",
+      payload: { ...product, quantity },
+    });
+  };
+
   return (
     <div className="card">
       <Link href={`/e-commerce/${product._id}`}>
@@ -15,14 +31,14 @@ export default function ProductItem({ product, addToCartHandler }) {
         <Link href={`/e-commerce/${product._id}`}>
           <h2 className="text-lg">{product.name}</h2>
         </Link>
-        <p className="mb-2">{product.brand}</p>
+        <p className="mb-2">{product.category}</p>
         <p>RM{product.price}</p>
         <button
-          className="primary-button"
+          className="primary-button mt-2"
           type="button"
-          onClick={() => addToCartHandler(product)}
+          onClick={addToCartHandler}
         >
-          Add to cart
+          Add to Cart
         </button>
       </div>
     </div>

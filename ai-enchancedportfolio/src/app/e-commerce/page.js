@@ -1,23 +1,22 @@
+/* src/app/e-commerce/page.js */
+
 import dbConnect from '../libs/mongoose';
 import Product from '../models/Product';
-import ProductList from './ProductList';
 import Navbar from 'components/Navbar';
 import { convertDoc } from '../libs/convertDocs';
+import ProductBrowser from 'components/ProductBrowser';
 
 export default async function ProductsPage() {
   await dbConnect();
   const productsFromDb = await Product.find().lean();
-  const products = productsFromDb.map(convertDoc); // <- convert for client use
+  const products = productsFromDb.map(convertDoc);
 
   return (
     <div>
       <Navbar />
       <div className="p-8">
         <h2 className="text-3xl font-semibold mb-4">Products</h2>
-
-        <div className="hidden md:block">
-          <ProductList products={products} />
-        </div>
+        <ProductBrowser initialProducts={products} />
       </div>
     </div>
   );

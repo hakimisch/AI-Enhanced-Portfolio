@@ -14,6 +14,7 @@
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.9",
     "cloudinary": "^2.6.1",
+    "lucide-react": "^0.545.0",
     "mongodb": "^6.16.0",
     "mongoose": "^8.14.2",
     "next": "15.3.2",
@@ -22,6 +23,7 @@
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
     "react-grid-gallery": "^1.0.1",
+    "react-range": "^1.10.0",
     "react-toastify": "^11.0.5",
     "uuid": "^11.1.0"
   },

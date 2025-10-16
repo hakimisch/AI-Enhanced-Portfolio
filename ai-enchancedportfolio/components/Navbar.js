@@ -2,20 +2,28 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { useStore } from "@/app/context/StoreContext";
+import { ShoppingCart } from "lucide-react";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
+  const { state } = useStore();
+  const { cart } = state;
+  const totalItems = cart.cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   const handleLogout = () => {
-    signOut({ callbackUrl: "/" }); // Redirect to homepage after logout
+    signOut({ callbackUrl: "/" });
   };
 
   const isAdmin = session?.user?.isAdmin;
 
   return (
-    <nav className="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+    <nav className="bg-white shadow-md px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+      {/* Left: Logo */}
       <h1 className="text-xl font-bold text-gray-800">🎨 Artfolio</h1>
-      <div className="space-x-4">
+
+      {/* Right: Links */}
+      <div className="flex items-center space-x-4">
         <Link href="/" className="text-gray-700 hover:text-blue-500">Home</Link>
         <Link href="/artworks" className="text-gray-700 hover:text-blue-500">My Artworks</Link>
         <Link href="/about" className="text-gray-700 hover:text-blue-500">About</Link>
@@ -27,10 +35,7 @@ export default function Navbar() {
         )}
 
         {status === "authenticated" ? (
-          <button
-            onClick={handleLogout}
-            className="text-gray-700 hover:text-blue-500"
-          >
+          <button onClick={handleLogout} className="text-gray-700 hover:text-blue-500">
             Logout
           </button>
         ) : (
@@ -39,6 +44,20 @@ export default function Navbar() {
             <Link href="/auth/register" className="text-gray-700 hover:text-blue-500">Register</Link>
           </>
         )}
+
+        {/* Cart link */}
+        <Link
+          href="/e-commerce/cart"
+          className="relative text-gray-700 hover:text-blue-500 flex items-center"
+        >
+          <ShoppingCart size={22} />
+          <span className="ml-1">Cart</span>
+          {totalItems > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+              {totalItems}
+            </span>
+          )}
+        </Link>
       </div>
     </nav>
   );
