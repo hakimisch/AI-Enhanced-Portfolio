@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function AdminMerchandise() {
+  const pathname = usePathname();
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({
     _id: '',
@@ -70,6 +73,30 @@ export default function AdminMerchandise() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-semibold mb-6">Merch Management</h1>
+
+      {/* ✅ Tab navigation */}
+      <div className="flex gap-4 mb-6">
+        <Link
+          href="/admin/merchandise/products"
+          className={`px-4 py-2 rounded ${
+            pathname.includes("/products")
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          Products
+        </Link>
+        <Link
+          href="/admin/merchandise/orders"
+          className={`px-4 py-2 rounded ${
+            pathname.includes("/orders")
+              ? "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          Orders
+        </Link>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 mb-8 border p-4 rounded bg-white">
         <h2 className="text-xl font-semibold">{editing ? 'Edit Product' : 'Add New Product'}</h2>
