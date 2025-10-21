@@ -4,10 +4,11 @@ const ArtworkSchema = new mongoose.Schema(
   {
     title: String,
     artistName: String,
+    artistEmail: String, 
     imageUrl: String,
-    width: Number,       // ← NEW
-    height: Number,       // ← NEW
-    publicId: String, // ← NEW
+    width: Number,
+    height: Number,
+    publicId: String,
   },
   { timestamps: true }
 );

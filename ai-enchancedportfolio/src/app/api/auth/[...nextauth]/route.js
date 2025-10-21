@@ -10,7 +10,8 @@ const connectToDb = async () => {
   await mongoose.connect(process.env.MONGODB_URI);
 };
 
-const handler = NextAuth({
+// ✅ Export this so other routes (like /api/profile) can use it
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -20,23 +21,18 @@ const handler = NextAuth({
       },
       async authorize(credentials) {
         await connectToDb();
-
         const user = await User.findOne({ email: credentials.email });
 
-        if (!user) {
-          throw new Error("No user found with this email");
-        }
-
+        if (!user) throw new Error("No user found with this email");
         const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) {
-          throw new Error("Invalid password");
-        }
+        if (!isValid) throw new Error("Invalid password");
 
         return {
           id: user._id,
           name: user.username,
           email: user.email,
           isAdmin: user.isAdmin,
+          isArtist: user.isArtist,
         };
       },
     }),
@@ -48,12 +44,14 @@ const handler = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.isAdmin = user.isAdmin;
+        token.isArtist = user.isArtist;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.isAdmin = token.isAdmin;
+        session.user.isArtist = token.isArtist;
       }
       return session;
     },
@@ -62,6 +60,7 @@ const handler = NextAuth({
     signIn: "/auth/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
-});
+};
 
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

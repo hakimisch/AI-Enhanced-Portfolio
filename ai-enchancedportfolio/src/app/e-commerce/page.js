@@ -13,7 +13,7 @@ export default async function ProductsPage() {
 
   return (
     <div>
-      <Navbar />
+      
       <div className="p-8">
         <h2 className="text-3xl font-semibold mb-4">Products</h2>
         <ProductBrowser initialProducts={products} />

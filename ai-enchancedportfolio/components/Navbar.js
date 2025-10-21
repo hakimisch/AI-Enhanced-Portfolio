@@ -1,3 +1,4 @@
+// components/Navbar.js
 "use client";
 
 import Link from "next/link";
@@ -11,18 +12,15 @@ export default function Navbar() {
   const { cart } = state;
   const totalItems = cart.cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
-  const handleLogout = () => {
-    signOut({ callbackUrl: "/" });
-  };
+  const handleLogout = () => signOut({ callbackUrl: "/" });
 
   const isAdmin = session?.user?.isAdmin;
+  const isArtist = session?.user?.isArtist; // ✅ new
 
   return (
     <nav className="bg-white shadow-md px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-      {/* Left: Logo */}
       <h1 className="text-xl font-bold text-gray-800">🎨 Artfolio</h1>
 
-      {/* Right: Links */}
       <div className="flex items-center space-x-4">
         <Link href="/" className="text-gray-700 hover:text-blue-500">Home</Link>
         <Link href="/artworks" className="text-gray-700 hover:text-blue-500">My Artworks</Link>
@@ -30,14 +28,28 @@ export default function Navbar() {
         <Link href="/contact" className="text-gray-700 hover:text-blue-500">Contact</Link>
         <Link href="/e-commerce" className="text-gray-700 hover:text-blue-500">Merchandise</Link>
 
+        {/* ✅ Artist-only link */}
+        {isArtist && (
+          <Link href="/artist" className="text-gray-700 hover:text-blue-500">
+            Artist
+          </Link>
+        )}
+
         {isAdmin && (
-          <Link href="/admin" className="text-gray-700 hover:text-blue-500">Admin</Link>
+          <Link href="/admin" className="text-gray-700 hover:text-blue-500">
+            Admin
+          </Link>
         )}
 
         {status === "authenticated" ? (
-          <button onClick={handleLogout} className="text-gray-700 hover:text-blue-500">
-            Logout
-          </button>
+          <>
+            <Link href="/profile" className="text-gray-700 hover:text-blue-500">
+              Profile
+            </Link>
+            <button onClick={handleLogout} className="text-gray-700 hover:text-blue-500">
+              Logout
+            </button>
+          </>
         ) : (
           <>
             <Link href="/auth/login" className="text-gray-700 hover:text-blue-500">Login</Link>
@@ -45,11 +57,8 @@ export default function Navbar() {
           </>
         )}
 
-        {/* Cart link */}
-        <Link
-          href="/e-commerce/cart"
-          className="relative text-gray-700 hover:text-blue-500 flex items-center"
-        >
+        {/* Cart */}
+        <Link href="/e-commerce/cart" className="relative text-gray-700 hover:text-blue-500 flex items-center">
           <ShoppingCart size={22} />
           <span className="ml-1">Cart</span>
           {totalItems > 0 && (

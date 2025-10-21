@@ -1,3 +1,4 @@
+//src/app/artworks
 
 import Navbar from 'components/Navbar';
 import Artwork from '@/app/models/Artwork';
