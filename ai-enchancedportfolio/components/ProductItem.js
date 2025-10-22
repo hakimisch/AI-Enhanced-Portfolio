@@ -1,5 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
-/*ai-enchancedportfolio/components/ProductItem.js*/
+// components/ProductItem.js
 
 "use client";
 import Link from "next/link";
@@ -27,12 +26,15 @@ export default function ProductItem({ product }) {
           className="rounded shadow object-cover h-64 w-full"
         />
       </Link>
-      <div className="flex flex-col items-center justify-center p-5">
+      <div className="flex flex-col items-center justify-center p-5 text-center">
         <Link href={`/e-commerce/${product._id}`}>
-          <h2 className="text-lg">{product.name}</h2>
+          <h2 className="text-lg font-semibold">{product.name}</h2>
         </Link>
-        <p className="mb-2">{product.category}</p>
-        <p>RM{product.price}</p>
+        <p className="text-gray-600 text-sm italic mb-1">
+          by {product.artistName || "Unknown Artist"}
+        </p>
+        <p className="text-gray-700 mb-2">{product.category}</p>
+        <p className="font-medium">RM{product.price}</p>
         <button
           className="primary-button mt-2"
           type="button"

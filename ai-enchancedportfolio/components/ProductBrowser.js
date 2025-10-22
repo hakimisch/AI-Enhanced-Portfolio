@@ -9,10 +9,10 @@ export default function ProductBrowser({ initialProducts }) {
   const [products, setProducts] = useState(initialProducts);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
-  const [priceRange, setPriceRange] = useState([0, 200]);
+  const [priceRange, setPriceRange] = useState([0, 0]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [maxPrice, setMaxPrice] = useState(200);
+  const [maxPrice, setMaxPrice] = useState(0);
 
   // --- Debounced state (to reduce excessive fetches) ---
   const [debouncedFilters, setDebouncedFilters] = useState({
@@ -38,9 +38,10 @@ export default function ProductBrowser({ initialProducts }) {
         const params = new URLSearchParams();
         if (search) params.append('search', search);
         if (category) params.append('category', category);
-        if (priceRange[0]) params.append('min', priceRange[0]);
-        if (priceRange[1]) params.append('max', priceRange[1]);
-
+        if (priceRange[0] > 0) params.append('min', priceRange[0]);
+        if (priceRange[1] > 0 && priceRange[1] !== maxPrice) {
+          params.append('max', priceRange[1]);
+        }  
         const res = await fetch(`/api/products?${params.toString()}`);
         const data = await res.json();
         setProducts(data);
@@ -64,7 +65,7 @@ export default function ProductBrowser({ initialProducts }) {
 
         const max = all.length > 0 ? Math.ceil(Math.max(...all.map((p) => p.price))) : 500;
         setMaxPrice(max);
-        if (priceRange[1] > max) setPriceRange([0, max]);
+        setPriceRange([0, max]);
       } catch (err) {
         console.error('Error fetching categories or max price', err);
       }
@@ -83,7 +84,7 @@ export default function ProductBrowser({ initialProducts }) {
       {/* Search and Filters */}
       <div className="flex flex-col md:flex-row flex-wrap gap-4 mb-8 items-end">
         {/* Search */}
-        <div className="flex flex-col w-full md:w-1/3">
+        <div className="flex flex-col w-full md:w-1/4">
           <label className="text-sm text-gray-600 mb-1">Search</label>
           <input
             type="text"
@@ -95,7 +96,7 @@ export default function ProductBrowser({ initialProducts }) {
         </div>
 
         {/* Category */}
-        <div className="flex flex-col w-full md:w-1/4">
+        <div className="flex flex-col w-full md:w-1/5">
           <label className="text-sm text-gray-600 mb-1">Category</label>
           <select
             className="border p-2 rounded"
@@ -116,38 +117,43 @@ export default function ProductBrowser({ initialProducts }) {
           <label className="text-sm text-gray-600 mb-2">
             Price Range (RM{priceRange[0]} - RM{priceRange[1]})
           </label>
-          <Range
-            step={1}
-            min={0}
-            max={maxPrice}
-            values={priceRange}
-            onChange={setPriceRange}
-            renderTrack={({ props, children }) => (
-              <div
-                {...props}
-                className="h-2 w-full bg-gray-200 rounded-full cursor-pointer"
-              >
+
+          {maxPrice > 0 ? (
+            <Range
+              step={1}
+              min={0}
+              max={maxPrice}
+              values={priceRange}
+              onChange={setPriceRange}
+              renderTrack={({ props, children }) => (
                 <div
-                  className="h-2 bg-gray-500 rounded-full"
-                  style={{
-                    marginLeft: `${(priceRange[0] / maxPrice) * 100}%`,
-                    width: `${((priceRange[1] - priceRange[0]) / maxPrice) * 100}%`,
-                  }}
-                />
-                {children}
-              </div>
-            )}
-            renderThumb={({ props }) => {
-                const { key, ...thumbProps } = props;
+                  {...props}
+                  className="h-2 w-full bg-gray-200 rounded-full cursor-pointer"
+                >
+                  <div
+                    className="h-2 bg-gray-500 rounded-full"
+                    style={{
+                      marginLeft: `${(priceRange[0] / maxPrice) * 100}%`,
+                      width: `${((priceRange[1] - priceRange[0]) / maxPrice) * 100}%`,
+                    }}
+                  />
+                  {children}
+                </div>
+              )}
+              renderThumb={({ props }) => {
+                const { key, ...thumbProps } = props; // ✅ remove key from spread
                 return (
-                    <div
+                  <div
                     key={key}
                     {...thumbProps}
                     className="h-4 w-4 bg-gray-700 rounded-full shadow focus:outline-none"
-                    />
+                  />
                 );
-            }}
-          />
+              }}
+            />
+          ) : (
+            <p className="text-gray-400 text-sm">Loading price range...</p>
+          )}
         </div>
 
         {/* Reset */}

@@ -1,5 +1,7 @@
 'use client';
 
+// src/app/artist/merchandise/orders/page.js
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -55,7 +57,7 @@ export default function AdminOrdersPage() {
       {/* ✅ Tab navigation (shared with Products page) */}
       <div className="flex gap-4 mb-6">
         <Link
-          href="/admin/merchandise/products"
+          href="/artist/merchandise/products"
           className={`px-4 py-2 rounded ${
             pathname.includes('/products')
               ? 'bg-blue-600 text-white'
@@ -65,7 +67,7 @@ export default function AdminOrdersPage() {
           Products
         </Link>
         <Link
-          href="/admin/merchandise/orders"
+          href="/artist/merchandise/orders"
           className={`px-4 py-2 rounded ${
             pathname.includes('/orders')
               ? 'bg-blue-600 text-white'

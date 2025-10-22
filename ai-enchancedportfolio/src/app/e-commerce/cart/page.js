@@ -1,3 +1,6 @@
+//src/app/e-commerce/cart/page.js
+
+
 "use client";
 import { useStore } from "@/app/context/StoreContext";
 import Link from "next/link";

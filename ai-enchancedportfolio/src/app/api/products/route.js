@@ -1,5 +1,4 @@
-//src/app/api/products/route.js
-
+// src/app/api/products/route.js
 import dbConnect from '@/app/libs/mongoose';
 import Product from '@/app/models/Product';
 import { NextResponse } from 'next/server';
@@ -15,7 +14,17 @@ export async function GET(req) {
   const max = searchParams.get('max');
 
   const filter = {};
-  if (search) filter.name = { $regex: search, $options: 'i' };
+
+  // ✅ Enhanced search: match name OR artist name/email
+  if (search) {
+    filter.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { artistName: { $regex: search, $options: 'i' } },
+      { artistEmail: { $regex: search, $options: 'i' } },
+      { category: { $regex: search, $options: 'i' } }, // also allow category
+    ];
+  }
+
   if (category) filter.category = category;
   if (min || max) {
     filter.price = {};
@@ -47,6 +56,8 @@ export async function POST(req) {
       price: Number(data.price),
       countInStock: Number(data.countInStock),
       description: data.description,
+      artistName: data.artistName || '', // ✅ ensure artist info is stored
+      artistEmail: data.artistEmail || '',
     });
 
     return NextResponse.json(product, { status: 201 });

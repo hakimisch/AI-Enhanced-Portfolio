@@ -1,10 +1,15 @@
+// src/app/e-commerce/checkout/page.js
+
 "use client";
+
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useStore } from "@/app/context/StoreContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function CheckoutPage() {
+  const { data: session, status } = useSession();
   const { state, dispatch } = useStore();
   const { cart } = state;
   const router = useRouter();
@@ -22,6 +27,24 @@ export default function CheckoutPage() {
     0
   );
 
+  // ✅ Redirect unauthenticated users to login
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/login?redirect=/e-commerce/checkout");
+    }
+  }, [status, router]);
+
+  // ✅ Autofill name and email when session is available
+  useEffect(() => {
+    if (session?.user) {
+      setForm((prev) => ({
+        ...prev,
+        name: session.user.name || "",
+        email: session.user.email || "",
+      }));
+    }
+  }, [session]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -33,6 +56,9 @@ export default function CheckoutPage() {
     paymentStatus: "pending",
     fulfillmentStatus: "unfulfilled",
   };
+
+  // 🚫 Prevent rendering until session is checked
+  if (status === "loading") return <p className="p-8">Loading...</p>;
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
@@ -47,7 +73,8 @@ export default function CheckoutPage() {
             value={form.name}
             onChange={handleChange}
             required
-            className="border w-full p-2 rounded"
+            disabled
+            className="border w-full p-2 rounded bg-gray-100 cursor-not-allowed"
           />
         </div>
         <div>
@@ -58,7 +85,8 @@ export default function CheckoutPage() {
             value={form.email}
             onChange={handleChange}
             required
-            className="border w-full p-2 rounded"
+            disabled
+            className="border w-full p-2 rounded bg-gray-100 cursor-not-allowed"
           />
         </div>
         <div>
@@ -90,7 +118,7 @@ export default function CheckoutPage() {
         </div>
       </form>
 
-      {/* PayPal payment button */}
+      {/* 🧾 PayPal payment section */}
       <PayPalScriptProvider
         options={{
           "client-id": process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID,
@@ -107,8 +135,7 @@ export default function CheckoutPage() {
                 body: JSON.stringify({ totalPrice }),
               });
               const data = await res.json();
-              console.log("PayPal order created:", data);
-              return data.id; // This must exist
+              return data.id;
             }}
             onApprove={async (data) => {
               setLoading(true);
@@ -121,7 +148,7 @@ export default function CheckoutPage() {
                 }),
               });
 
-              const result = await res.json(); // 👈 add this
+              const result = await res.json();
 
               if (result.success) {
                 dispatch({ type: "CLEAR_CART" });
@@ -131,7 +158,7 @@ export default function CheckoutPage() {
               } else {
                 alert("Payment capture failed.");
               }
-     
+
               setLoading(false);
             }}
             onError={(err) => {

@@ -1,4 +1,5 @@
 // src/app/models/Order.js
+
 import mongoose from "mongoose";
 
 const OrderSchema = new mongoose.Schema(
@@ -14,18 +15,19 @@ const OrderSchema = new mongoose.Schema(
         price: Number,
         quantity: Number,
         image: String,
+        artistEmail: String, // ✅ add this line
       },
     ],
     totalPrice: Number,
-    paymentId: String, 
+    paymentId: String,
     paymentStatus: { type: String, default: "pending" },
     fulfillmentStatus: { type: String, default: "unfulfilled" },
-    orderNumber: { type: String, unique: true }, // 👈 New friendly ID
+    orderNumber: { type: String, unique: true },
   },
   { timestamps: true }
 );
 
-// 👇 Generate readable order number like 20251017-ABC123
+// 👇 Generate readable order number like #20251017-ABC123
 OrderSchema.pre("save", function (next) {
   if (!this.orderNumber) {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");

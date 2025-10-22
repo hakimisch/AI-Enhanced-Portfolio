@@ -101,15 +101,6 @@ export default function AdminPage() {
               </Link>
             </li>
             <li className="py-3 text-xl hover:text-purple-700">
-              <Link href="/admin/artworks">Artworks</Link>
-            </li>
-            <li className="py-3 text-xl hover:text-purple-700">
-              <Link href="/admin/orders">Orders</Link>
-            </li>
-            <li className="py-3 text-xl hover:text-purple-700">
-              <Link href="/admin/merchandise/products">Products</Link>
-            </li>
-            <li className="py-3 text-xl hover:text-purple-700">
               <Link href="/admin/users">Users</Link>
             </li>
           </ul>

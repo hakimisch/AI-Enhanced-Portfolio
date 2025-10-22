@@ -18,7 +18,7 @@ export default function ArtistDashboard() {
           <h2 className="text-lg font-semibold mb-2">My Artworks</h2>
           <p>Upload, edit, or delete your portfolio pieces.</p>
         </Link>
-        <Link href="/artist/merchandise" className="p-6 bg-white rounded shadow hover:scale-105 transition">
+        <Link href="/artist/merchandise/products" className="p-6 bg-white rounded shadow hover:scale-105 transition">
           <h2 className="text-lg font-semibold mb-2">My Products</h2>
           <p>Manage items you sell in the shop.</p>
         </Link>

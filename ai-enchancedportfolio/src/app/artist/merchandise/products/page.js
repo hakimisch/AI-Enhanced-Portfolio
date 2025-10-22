@@ -1,5 +1,7 @@
 'use client';
 
+// src/app/artist/merchandise/products/page.js
+
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -27,7 +29,7 @@ export default function AdminMerchandise() {
   }, []);
 
   const fetchProducts = async () => {
-    const res = await fetch('/api/products');
+    const res = await fetch('/api/products/artist');
     const data = await res.json();
     setProducts(data);
   };
@@ -77,7 +79,7 @@ export default function AdminMerchandise() {
       {/* ✅ Tab navigation */}
       <div className="flex gap-4 mb-6">
         <Link
-          href="/admin/merchandise/products"
+          href="/artist/merchandise/products"
           className={`px-4 py-2 rounded ${
             pathname.includes("/products")
               ? "bg-blue-600 text-white"
@@ -87,7 +89,7 @@ export default function AdminMerchandise() {
           Products
         </Link>
         <Link
-          href="/admin/merchandise/orders"
+          href="/artist/merchandise/orders"
           className={`px-4 py-2 rounded ${
             pathname.includes("/orders")
               ? "bg-blue-600 text-white"
