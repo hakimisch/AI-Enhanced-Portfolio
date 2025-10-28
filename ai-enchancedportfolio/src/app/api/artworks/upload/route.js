@@ -7,7 +7,6 @@ import { Readable } from "stream";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 
-
 const connectToDb = async () => {
   if (mongoose.connection.readyState < 1) {
     await mongoose.connect(process.env.MONGODB_URI);
@@ -26,8 +25,13 @@ export async function POST(req) {
     const formData = await req.formData();
     const file = formData.get("image");
     const title = formData.get("title");
+    const type = formData.get("type"); // 🆕 Add artwork type
 
-    // Convert the File into a buffer for Cloudinary
+    if (!title || !file || !type) {
+      return new Response("Missing required fields", { status: 400 });
+    }
+
+    // Convert file to buffer for Cloudinary upload
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -43,12 +47,13 @@ export async function POST(req) {
       Readable.from(buffer).pipe(stream);
     });
 
-    // ✅ Auto-assign artist info from session
+    //  Save to MongoDB
     const newArtwork = await Artwork.create({
       title,
+      type, // 🆕 include artwork type
       artistName: session.user.name || "Unknown Artist",
       artistEmail: session.user.email,
-      artistId: session.user.id, // optional, can store reference
+      artistId: session.user.id,
       imageUrl: uploaded.secure_url,
       publicId: uploaded.public_id,
     });
