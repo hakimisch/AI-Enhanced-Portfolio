@@ -35,7 +35,7 @@ export default async function ArtworkDetailPage({ params }) {
 
       <div className="flex flex-col md:flex-row items-center justify-center p-8 md:p-16 gap-8">
         {/* Image Section */}
-        <div className="w-full md:w-1/2 flex justify-center">
+        <div className="w-full md:w-3/4 flex justify-center">
           <Image
             src={artwork.imageUrl}
             alt={artwork.title}
@@ -46,7 +46,7 @@ export default async function ArtworkDetailPage({ params }) {
         </div>
 
         {/* Details Section */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center text-center md:text-left space-y-4">
+        <div className="w-full md:w-1/4 flex flex-col justify-center text-center md:text-left space-y-4">
           <h1 className="text-5xl md:text-6xl font-light leading-tight text-gray-800">
             {artwork.title}
           </h1>
