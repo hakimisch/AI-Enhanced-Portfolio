@@ -24,8 +24,7 @@ export default function Navbar() {
       <div className="flex items-center space-x-4">
         <Link href="/" className="text-gray-700 hover:text-blue-500">Home</Link>
         <Link href="/artworks" className="text-gray-700 hover:text-blue-500">Artworks</Link>
-        <Link href="/about" className="text-gray-700 hover:text-blue-500">About</Link>
-        <Link href="/contact" className="text-gray-700 hover:text-blue-500">Contact</Link>
+        <Link href="/artists" className="text-gray-700 hover:text-blue-500">Artists</Link>
         <Link href="/e-commerce" className="text-gray-700 hover:text-blue-500">Merchandise</Link>
 
         {/* ✅ Artist-only link */}

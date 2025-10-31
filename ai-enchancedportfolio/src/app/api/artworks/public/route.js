@@ -1,10 +1,30 @@
 // src/app/api/artworks/public/route.js
-import dbConnect from "@/app/libs/mongoose";
+import mongoose from "mongoose";
 import Artwork from "@/app/models/Artwork";
-import { NextResponse } from "next/server";
+import User from "@/app/models/User";
+
+const connectToDb = async () => {
+  if (mongoose.connection.readyState < 1) {
+    await mongoose.connect(process.env.MONGODB_URI);
+  }
+};
 
 export async function GET() {
-  await dbConnect();
+  await connectToDb();
+
   const artworks = await Artwork.find().sort({ createdAt: -1 }).lean();
-  return NextResponse.json(artworks);
+
+  // 🔹 Build unique artist list
+  const artistEmails = [...new Set(artworks.map((a) => a.artistEmail))];
+  const artists = await User.find({ email: { $in: artistEmails } })
+    .select("username email profileImage aboutMe")
+    .lean();
+
+  // Attach artist info to artworks
+  const enrichedArtworks = artworks.map((art) => ({
+    ...art,
+    artistProfile: artists.find((a) => a.email === art.artistEmail) || {},
+  }));
+
+  return new Response(JSON.stringify(enrichedArtworks), { status: 200 });
 }

@@ -2,6 +2,7 @@
 
 "use client";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "components/Navbar";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,6 +12,18 @@ export default function ArtworkPage() {
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
+  const [artistFilter, setArtistFilter] = useState("");
+  const [artistName, setArtistName] = useState("");
+
+  const searchParams = useSearchParams();
+
+  // Read artist filter from URL
+  useEffect(() => {
+    const artistFromUrl = searchParams.get("artist");
+    if (artistFromUrl) {
+      setArtistFilter(decodeURIComponent(artistFromUrl));
+    }
+  }, [searchParams]);
 
   // Fetch artworks from API
   useEffect(() => {
@@ -27,25 +40,41 @@ export default function ArtworkPage() {
     fetchArtworks();
   }, []);
 
-  // Apply filters when search or type changes
+  // Apply filters when search, type, or artist changes
   useEffect(() => {
     const lowerSearch = search.toLowerCase();
-    const filteredList = artworks.filter(
-      (art) =>
-        (art.title.toLowerCase().includes(lowerSearch) ||
-          art.artistName.toLowerCase().includes(lowerSearch)) &&
-        (type ? art.type === type : true)
-    );
+    const filteredList = artworks.filter((art) => {
+      const matchesSearch =
+        art.title.toLowerCase().includes(lowerSearch) ||
+        art.artistName.toLowerCase().includes(lowerSearch);
+      const matchesType = type ? art.type === type : true;
+      const matchesArtist = artistFilter
+        ? art.artistEmail === artistFilter
+        : true;
+      return matchesSearch && matchesType && matchesArtist;
+    });
+
     setFiltered(filteredList);
-  }, [search, type, artworks]);
+
+    // Update artist name for heading
+    if (artistFilter && filteredList.length > 0) {
+      setArtistName(filteredList[0].artistName);
+    } else {
+      setArtistName("");
+    }
+  }, [search, type, artistFilter, artworks]);
 
   return (
     <div>
       <Navbar />
       <div className="p-8">
-        <h2 className="text-3xl font-semibold mb-6 text-center">Artworks</h2>
+        <h2 className="text-3xl font-semibold mb-6 text-center">
+          {artistFilter
+            ? `Artworks by ${artistName || "this artist"}`
+            : "Artworks"}
+        </h2>
 
-        {/* 🔍 Filters */}
+        {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-8 justify-center">
           <input
             type="text"
@@ -66,9 +95,21 @@ export default function ArtworkPage() {
             <option value="Commission">Commission</option>
             <option value="Illustration">Illustration</option>
           </select>
+
+          {artistFilter && (
+            <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded text-sm text-blue-700">
+              <span>Filtering by: {artistName || artistFilter}</span>
+              <button
+                className="hover:text-red-500"
+                onClick={() => setArtistFilter("")}
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* 🖼️ Artwork Gallery */}
+        {/* Artwork Gallery */}
         {filtered.length === 0 ? (
           <p className="text-gray-500 text-center">No artworks found.</p>
         ) : (

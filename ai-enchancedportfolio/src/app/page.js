@@ -118,25 +118,38 @@ export default function HomePage() {
 
       {/* FEATURED ARTISTS */}
       <section className="bg-gray-50 py-16 px-6">
-        <h2 className="text-3xl font-semibold text-center mb-10">
-          Featured Artists
-        </h2>
+        <h2 className="text-3xl font-semibold text-center mb-10">Featured Artists</h2>
 
         {artists.length === 0 ? (
           <p className="text-center text-gray-500">No artists found.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto">
             {artists.map((artist) => (
-              <div
+              <Link
                 key={`${artist.email || artist.name}-${Math.random().toString(36).slice(2, 8)}`}
-                className="bg-white shadow rounded-lg p-4 text-center hover:shadow-md transition"
+                href={`/artists/${encodeURIComponent(artist.email)}`}
+                className="group block bg-white rounded-lg shadow hover:shadow-lg transition p-6 text-center min-h-[320px] flex flex-col items-center justify-start"
               >
-                <div className="w-20 h-20 mx-auto bg-gray-200 rounded-full mb-3 flex items-center justify-center text-2xl font-bold text-gray-600">
-                  {artist.name?.charAt(0) || "A"}
-                </div>
-                <h3 className="font-semibold">{artist.name}</h3>
-                <p className="text-xs text-gray-500">{artist.email}</p>
-              </div>
+                {/* ✅ Circular Profile Image or Fallback */}
+                {artist.profileImage ? (
+                  <div className="w-24 h-24 mb-4 rounded-full overflow-hidden border border-gray-200">
+                    <Image
+                      src={artist.profileImage}
+                      alt={artist.username}
+                      width={96}
+                      height={96}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-24 h-20 mb-4 rounded-full bg-gray-200 flex items-center justify-center text-3xl font-bold text-gray-600">
+                    {artist.name?.charAt(0) || "A"}
+                  </div>
+                )}
+
+                <h3 className="font-semibold text-lg">{artist.name}</h3>
+                <p className="text-xs text-gray-500 mb-2">{artist.email}</p>
+              </Link>
             ))}
           </div>
         )}
