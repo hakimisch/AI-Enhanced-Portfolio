@@ -11,24 +11,22 @@ const connectToDb = async () => {
 export async function GET() {
   await connectToDb();
 
-  // Get all users who are artists
-  const artists = await User.find({ isArtist: true })
-    .select("username email aboutMe profileImage")
+  // 🔹 Get all artists (those who have uploaded at least one artwork)
+  const artworks = await Artwork.find().lean();
+  const artistEmails = [...new Set(artworks.map((a) => a.artistEmail))];
+
+  const artists = await User.find({ email: { $in: artistEmails } })
+    .select("username email profileImage aboutMe")
     .lean();
 
-  // Fetch one sample artwork for each artist
-  const artistData = await Promise.all(
-    artists.map(async (artist) => {
-      const sampleArt = await Artwork.findOne({ artistEmail: artist.email })
-        .sort({ createdAt: -1 })
-        .lean();
+  // 🔹 Match one artwork sample for preview
+  const enrichedArtists = artists.map((artist) => {
+    const sampleArt = artworks.find((a) => a.artistEmail === artist.email);
+    return {
+      ...artist,
+      sampleArt: sampleArt?.imageUrl || null,
+    };
+  });
 
-      return {
-        ...artist,
-        sampleArt: sampleArt?.imageUrl || null,
-      };
-    })
-  );
-
-  return new Response(JSON.stringify(artistData), { status: 200 });
+  return new Response(JSON.stringify(enrichedArtists), { status: 200 });
 }

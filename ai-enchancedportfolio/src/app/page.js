@@ -1,5 +1,4 @@
 // src/app/page.js
-
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -11,36 +10,29 @@ export default function HomePage() {
   const [artists, setArtists] = useState([]);
   const [posts, setPosts] = useState([]);
 
-
   useEffect(() => {
-    async function fetchArtworksAndPosts() {
+    async function fetchData() {
       try {
-        const [artRes, postRes] = await Promise.all([
+        const [artRes, postRes, artistRes] = await Promise.all([
           fetch("/api/artworks/public"),
           fetch("/api/posts"),
+          fetch("/api/artists/public"), // ✅ New API
         ]);
 
-        const [artData, postData] = await Promise.all([
+        const [artData, postData, artistData] = await Promise.all([
           artRes.json(),
           postRes.json(),
+          artistRes.json(),
         ]);
 
-        const latest = artData.slice(0, 6);
-        setArtworks(latest);
-
-        const uniqueArtists = Array.from(
-          new Map(
-            artData.map((a) => [a.artistEmail, { name: a.artistName, email: a.artistEmail }])
-          ).values()
-        ).slice(0, 4);
-        setArtists(uniqueArtists);
-
+        setArtworks(artData.slice(0, 6));
         setPosts(postData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+        setArtists(artistData.slice(0, 4)); // Limit to 4 featured
       } catch (err) {
         console.error("Error fetching homepage data:", err);
       }
     }
-    fetchArtworksAndPosts();
+    fetchData();
   }, []);
 
   return (
@@ -126,13 +118,13 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto">
             {artists.map((artist) => (
               <Link
-                key={`${artist.email || artist.name}-${Math.random().toString(36).slice(2, 8)}`}
+                key={artist.email}
                 href={`/artists/${encodeURIComponent(artist.email)}`}
-                className="group block bg-white rounded-lg shadow hover:shadow-lg transition p-6 text-center min-h-[320px] flex flex-col items-center justify-start"
+                className="group block bg-white rounded-lg shadow hover:shadow-lg transition p-6 text-center min-h-[320px]"
               >
                 {/* ✅ Circular Profile Image or Fallback */}
                 {artist.profileImage ? (
-                  <div className="w-24 h-24 mb-4 rounded-full overflow-hidden border border-gray-200">
+                  <div className="w-24 h-24 mb-4 mx-auto rounded-full overflow-hidden border border-gray-200">
                     <Image
                       src={artist.profileImage}
                       alt={artist.username}
@@ -142,13 +134,16 @@ export default function HomePage() {
                     />
                   </div>
                 ) : (
-                  <div className="w-24 h-20 mb-4 rounded-full bg-gray-200 flex items-center justify-center text-3xl font-bold text-gray-600">
-                    {artist.name?.charAt(0) || "A"}
+                  <div className="w-24 h-24 mb-4 mx-auto rounded-full bg-gray-200 flex items-center justify-center text-3xl font-bold text-gray-600">
+                    {artist.username?.charAt(0) || "A"}
                   </div>
                 )}
 
-                <h3 className="font-semibold text-lg">{artist.name}</h3>
+                <h3 className="font-semibold text-lg">{artist.username}</h3>
                 <p className="text-xs text-gray-500 mb-2">{artist.email}</p>
+                <p className="text-sm text-gray-600 line-clamp-3">
+                  {artist.aboutMe || "This artist hasn’t written an introduction yet."}
+                </p>
               </Link>
             ))}
           </div>

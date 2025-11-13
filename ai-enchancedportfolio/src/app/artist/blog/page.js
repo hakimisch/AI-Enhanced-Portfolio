@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import DashboardLayout from "components/DashboardLayout";
 
 export default function ArtistBlogs() {
   const { data: session, status } = useSession();
@@ -68,6 +69,7 @@ export default function ArtistBlogs() {
   if (!session) return <p>Please log in to manage your blog posts.</p>;
 
   return (
+    <DashboardLayout>
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-2xl font-semibold mb-4">Manage Blog Posts</h1>
 
@@ -163,5 +165,6 @@ export default function ArtistBlogs() {
         ))}
       </div>
     </div>
+    </DashboardLayout>
   );
 }

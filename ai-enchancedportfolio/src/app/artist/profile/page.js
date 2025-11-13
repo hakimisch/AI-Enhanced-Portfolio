@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Navbar from "components/Navbar";
+import DashboardLayout from "components/DashboardLayout";
 
 export default function ArtistProfilePage() {
   const [profile, setProfile] = useState(null);
@@ -50,8 +50,8 @@ export default function ArtistProfilePage() {
   }
 
   return (
+    <DashboardLayout>
     <div>
-      <Navbar />
       <div className="max-w-3xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-6 text-center">My Profile</h1>
 
@@ -124,5 +124,6 @@ export default function ArtistProfilePage() {
         </form>
       </div>
     </div>
+    </DashboardLayout>
   );
 }

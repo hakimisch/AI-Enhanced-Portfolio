@@ -1,17 +1,13 @@
-'use client';
-
-// src/app/artist/merchandise/orders/page.js
-
 "use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+
+import { useEffect, useState, useMemo } from "react";
 import DashboardLayout from "components/DashboardLayout";
 
-export default function ArtistOrdersPage() {
-  const pathname = usePathname();
+export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     async function fetchOrders() {
@@ -47,45 +43,56 @@ export default function ArtistOrdersPage() {
     }
   }
 
+  const filteredOrders = useMemo(() => {
+  return orders.filter((o) => {
+    const matchSearch =
+      o.name?.toLowerCase().includes(search.toLowerCase()) ||
+      o.email?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = status
+      ? o.fulfillmentStatus === status
+      : true;
+    return matchSearch && matchStatus;
+  });
+  }, [orders, search, status]);
+
   if (loading)
     return <p className="p-8 text-gray-500">Loading orders...</p>;
 
   return (
-    <DashboardLayout>
+    <DashboardLayout isAdmin>
       <div className="p-8 bg-gray-50 min-h-screen">
         <h1 className="text-3xl font-semibold mb-6 text-gray-800">
-          Merchandise Orders
+          Order Management
         </h1>
 
-        {/* Tabs */}
-        <div className="flex gap-4 mb-6">
-          <Link
-            href="/artist/merchandise/products"
-            className={`px-4 py-2 rounded-lg ${
-              pathname.includes("/products")
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+        {/* Filters */}
+        <div className="bg-white p-4 rounded-xl shadow-sm mb-6">
+          <label className="block text-sm font-medium text-gray-600 mb-2">
+            Filter by Status
+          </label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-1/4 focus:ring-2 focus:ring-blue-500 outline-none"
           >
-            Products
-          </Link>
-          <Link
-            href="/artist/merchandise/orders"
-            className={`px-4 py-2 rounded-lg ${
-              pathname.includes("/orders")
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            Orders
-          </Link>
+            <option value="">All Status</option>
+            {[...new Set(orders.map((o) => o.fulfillmentStatus))].map(
+              (s) =>
+                s && (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                )
+            )}
+          </select>
         </div>
 
+
         {orders.length === 0 ? (
-          <p className="text-gray-500">No orders yet.</p>
+          <p className="text-gray-500">No orders found.</p>
         ) : (
           <div className="space-y-6">
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <div
                 key={order._id}
                 className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-6"
