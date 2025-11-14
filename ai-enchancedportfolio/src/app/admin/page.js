@@ -1,5 +1,3 @@
-//app/admin/page.js
-
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -8,6 +6,7 @@ import { useEffect, useReducer, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import Link from "next/link";
 import DashboardLayout from "components/DashboardLayout";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,12 +16,14 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+
 import {
   ShoppingCart,
   DollarSign,
   Users,
   Image as ArtIcon,
   Package,
+  UserCheck,
 } from "lucide-react";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -63,6 +64,7 @@ export default function AdminDashboard() {
         dispatch({ type: "FETCH_FAIL", payload: err.message });
       }
     };
+
     fetchSummary();
   }, [status, session, router, timeRange]);
 
@@ -76,7 +78,6 @@ export default function AdminDashboard() {
         label: "Sales",
         backgroundColor: "rgba(37, 99, 235, 0.6)",
         borderColor: "rgba(37, 99, 235, 1)",
-        borderWidth: 1,
         data: summary.salesData?.map((x) => x.totalSales) || [],
       },
     ],
@@ -107,18 +108,29 @@ export default function AdminDashboard() {
       icon: <Users className="text-orange-500" size={26} />,
       href: "/admin/users",
     },
+    {
+      title: "Artists",
+      value: summary.artistsCount || 0,
+      icon: <UserCheck className="text-indigo-500" size={26} />,
+      href: "/admin/users",
+    },
+    {
+      title: "Artworks",
+      value: summary.artworksCount || 0,
+      icon: <ArtIcon className="text-pink-500" size={26} />,
+      href: "/admin/artworks",
+    },
   ];
 
   return (
     <DashboardLayout isAdmin>
-      {/* ✅ Responsive padding + spacing */}
-      <div className="px-4 sm:px-6 lg:px-8 py-8 bg-gray-50 min-h-screen">
+      <div className="p-5 sm:p-8 bg-gray-50 min-h-screen">
         <h1 className="text-3xl font-semibold mb-6 text-gray-800">
           Admin Dashboard
         </h1>
 
-        {/* ✅ Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {/* Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
           {cards.map((card) => (
             <Link
               key={card.title}
@@ -136,12 +148,13 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* ✅ Sales Overview Chart */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-10 overflow-x-auto">
+        {/* Sales Overview */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-10">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-700">
               Sales Overview
             </h2>
+
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
@@ -152,34 +165,31 @@ export default function AdminDashboard() {
               <option value="all">All time</option>
             </select>
           </div>
-            {/* ✅ FIXED HEIGHT CONTAINER */}
-          <div className="h-64 sm:h-80">
+
+          <div className="w-full overflow-hidden h-[260px] sm:h-[300px]">
             <Bar
               data={chartData}
               options={{
-                responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                  x: { ticks: { color: "#4B5563" } },
-                  y: { ticks: { color: "#4B5563" }, beginAtZero: true },
-                },
               }}
             />
           </div>
         </div>
 
-        {/* ✅ Top Artists + Products */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          {/* Top Artists */}
-          <div className="bg-white rounded-xl shadow-sm p-6 overflow-x-auto">
+        {/* Top Artists + Top Products */}
+        <div className="grid md:grid-cols-2 gap-6 mb-10 pr-2 sm:pr-0">
+
+          {/* TOP ARTISTS */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-xl font-semibold text-gray-700 mb-4">
               Top Artists Sales
             </h2>
+
             {summary.topArtists?.length > 0 ? (
-              <div className="space-y-6">
+              <>
                 <Bar
                   data={{
-                    labels: summary.topArtists.map((a) => a.artistName),
+                    labels: summary.topArtists.map((a) => a.artistName || a.artistEmail),
                     datasets: [
                       {
                         label: "Sales (RM)",
@@ -188,45 +198,49 @@ export default function AdminDashboard() {
                       },
                     ],
                   }}
-                  options={{
-                    plugins: { legend: { display: false } },
-                    scales: {
-                      x: { ticks: { color: "#4B5563" } },
-                      y: { ticks: { color: "#4B5563" }, beginAtZero: true },
-                    },
-                  }}
+                  options={{ plugins: { legend: { display: false } } }}
                 />
-                <ul className="space-y-3">
-                  {summary.topArtists.map((artist, index) => (
+
+                <ul className="mt-4 space-y-3">
+                  {summary.topArtists.map((artist, i) => (
                     <li
-                      key={index}
+                      key={i}
                       className="flex justify-between items-center border-b last:border-none pb-2"
                     >
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                      <div className="flex items-center gap-3">
+                        {artist.artistImage ? (
+                          <img
+                            src={artist.artistImage}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gray-300" />
+                        )}
                         <span className="font-medium text-gray-700">
-                          {artist.artistName}
+                          {artist.artistName || artist.artistEmail}
                         </span>
                       </div>
+
                       <span className="font-semibold text-gray-800">
                         RM{artist.totalSales}
                       </span>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </>
             ) : (
               <p className="text-gray-400 italic">No artist data available</p>
             )}
           </div>
 
-          {/* Top Products */}
-          <div className="bg-white rounded-xl shadow-sm p-6 overflow-x-auto">
+          {/* TOP PRODUCTS */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-xl font-semibold text-gray-700 mb-4">
               Top Products
             </h2>
+
             {summary.topProducts?.length > 0 ? (
-              <div className="space-y-6">
+              <>
                 <Bar
                   data={{
                     labels: summary.topProducts.map((p) => p._id),
@@ -238,25 +252,21 @@ export default function AdminDashboard() {
                       },
                     ],
                   }}
-                  options={{
-                    plugins: { legend: { display: false } },
-                    scales: {
-                      x: { ticks: { color: "#4B5563" } },
-                      y: { ticks: { color: "#4B5563" }, beginAtZero: true },
-                    },
+                  options={{ 
+                    plugins: { legend: { display: false } } 
                   }}
                 />
-                <ul className="space-y-3">
-                  {summary.topProducts.map((p, index) => (
+
+                <ul className="mt-4 space-y-3">
+                  {summary.topProducts.map((p, i) => (
                     <li
-                      key={index}
+                      key={i}
                       className="flex justify-between items-center border-b last:border-none pb-2"
                     >
                       <div className="flex items-center gap-3">
                         {p.image && (
                           <img
                             src={p.image}
-                            alt={p._id}
                             className="w-8 h-8 rounded object-cover"
                           />
                         )}
@@ -264,25 +274,27 @@ export default function AdminDashboard() {
                           {p._id}
                         </span>
                       </div>
+
                       <span className="font-semibold text-gray-800">
                         RM{p.totalSales}
                       </span>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </>
             ) : (
               <p className="text-gray-400 italic">No product data available</p>
             )}
           </div>
         </div>
 
-        {/* ✅ Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm p-6 overflow-x-auto">
+        {/* Recent Activity */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-10">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">
             Recent Activity
           </h2>
-          <ul className="space-y-2 text-sm text-gray-600">
+
+          <ul className="space-y-3 text-sm text-gray-600">
             {summary.recentOrders?.length > 0 ? (
               summary.recentOrders.map((o) => (
                 <li
@@ -290,7 +302,7 @@ export default function AdminDashboard() {
                   className="flex justify-between items-center border-b last:border-none pb-2"
                 >
                   <span>
-                    <strong>{o.customerName}</strong> placed an order —{" "}
+                    <strong>{o.name}</strong> placed an order —{" "}
                     <span
                       className={`${
                         o.fulfillmentStatus === "fulfilled"
@@ -301,6 +313,7 @@ export default function AdminDashboard() {
                       {o.fulfillmentStatus}
                     </span>
                   </span>
+
                   <span className="text-gray-400 text-xs">
                     {new Date(o.createdAt).toLocaleDateString()}
                   </span>

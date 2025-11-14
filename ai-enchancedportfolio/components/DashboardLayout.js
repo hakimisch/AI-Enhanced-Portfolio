@@ -19,6 +19,7 @@ import {
   Home,
   FileText,
   Package,
+  Settings,
 } from "lucide-react";
 
 export default function DashboardLayout({ children }) {
@@ -41,6 +42,7 @@ export default function DashboardLayout({ children }) {
     { href: "/admin/products", label: "Products", icon: <Package size={20} /> },
     { href: "/admin/orders", label: "Orders", icon: <FileText size={20} /> },
     { href: "/admin/users", label: "Users", icon: <Users size={20} /> },
+    { href: "/admin/hero", label: "Hero Settings", icon: <Settings size={20} /> },
   ];
 
   const links = isAdmin ? adminLinks : artistLinks;

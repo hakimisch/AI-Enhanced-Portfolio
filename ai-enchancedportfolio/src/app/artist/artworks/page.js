@@ -177,7 +177,7 @@ export default function ArtistArtwork() {
                 key={art._id}
                 className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden"
               >
-                <div className="relative w-full h-56">
+                <div className="relative w-full h-84">
                   <Image
                     src={art.imageUrl}
                     alt={art.title}
