@@ -1,3 +1,5 @@
+//ChatWidget.js
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -22,16 +24,26 @@ function cleanBotMessage(text) {
   return text;
 }
 
-
 export default function ChatWidget() {
   const { data: session } = useSession();
+
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [ended, setEnded] = useState(false);
+  const [enabled, setEnabled] = useState(true);   // ← ADDED
+
   const chatRef = useRef(null);
   const router = useRouter();
+
+  // ✅ Fetch chatbot enabled/disabled state
+  useEffect(() => {
+    fetch("/api/chatbot/config")
+      .then(res => res.json())
+      .then(cfg => setEnabled(cfg.enabled))
+      .catch(() => setEnabled(true)); // fallback
+  }, []);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -93,6 +105,9 @@ export default function ChatWidget() {
       console.error("Chatbot error:", err);
     }
   };
+
+  // ⚠️ If chatbot is disabled, render nothing
+  if (!enabled) return null;
 
   return (
     <>
@@ -178,10 +193,6 @@ export default function ChatWidget() {
                     </button>
                   </>
                 )}
-
-
-                
-
               </div>
             ))}
 

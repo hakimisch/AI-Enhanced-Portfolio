@@ -1,29 +1,114 @@
-// contact/support/page.js
+//src/app/contact/support/page.js
 "use client";
-import { useState } from "react";
 
-export default function ContactSupport() {
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
-  const [ok, setOk] = useState(null);
+import React, { useState, useEffect } from "react";
+import DashboardLayout from "components/DashboardLayout";
+import Link from "next/link";
 
-  async function submit(e) {
-    e.preventDefault();
-    // You likely have an API to send email or ticket. Here we POST to /api/contact/support (create if needed).
-    const res = await fetch("/api/contact/support", { method: "POST", body: JSON.stringify(form), headers: { "Content-Type": "application/json" }});
-    setOk(res.ok);
+export default function AdminSupportPage() {
+  const [tickets, setTickets] = useState([]);
+  const [filter, setFilter] = useState("all");
+
+  useEffect(() => {
+    loadTickets();
+  }, []);
+
+  async function loadTickets() {
+    const res = await fetch("/api/support");
+    const data = await res.json();
+    setTickets(data.tickets);
   }
 
+  // unread count per ticket
+  function getUnreadCount(ticket) {
+    if (!ticket.messages) return 0;
+
+    const lastRead = ticket.lastReadAdminAt ? new Date(ticket.lastReadAdminAt) : null;
+
+    return ticket.messages.filter((msg) => {
+      return (
+        msg.sender === "user" &&
+        (!lastRead || new Date(msg.timestamp) > lastRead)
+      );
+    }).length;
+  }
+
+  const filtered =
+    filter === "all"
+      ? tickets
+      : tickets.filter((t) => t.status === filter);
+
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <h1 className="text-2xl mb-4">Contact Support</h1>
-      <form className="space-y-4" onSubmit={submit}>
-        <input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Your name" className="w-full p-2 border rounded" />
-        <input value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="Your email" className="w-full p-2 border rounded" />
-        <textarea value={form.message} onChange={e=>setForm({...form,message:e.target.value})} placeholder="How can we help?" className="w-full p-2 border rounded h-40" />
-        <button className="px-4 py-2 bg-blue-600 text-white rounded">Send</button>
-        {ok === true && <p className="text-green-600">Sent!</p>}
-        {ok === false && <p className="text-red-600">Failed to send.</p>}
-      </form>
-    </div>
+    <DashboardLayout isAdmin>
+      <div className="p-8 bg-gray-50 min-h-screen">
+
+        <h1 className="text-3xl font-semibold mb-6">Support Tickets</h1>
+
+        {/* Filters */}
+        <div className="flex gap-4 mb-6">
+          {["all", "open", "waiting", "closed"].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-lg ${
+                filter === f
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-gray-700 border border-gray-200"
+              }`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {/* Tickets */}
+        <div className="space-y-4">
+          {filtered.map((ticket) => {
+            const unreadCount = getUnreadCount(ticket);
+
+            return (
+              <Link
+                key={ticket._id}
+                href={`/admin/support/${ticket._id}`}
+                className="block bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition"
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-semibold">{ticket.subject}</h3>
+
+                  <div className="flex gap-2 items-center">
+                    {unreadCount > 0 && (
+                      <span className="text-xs bg-red-600 text-white px-2 py-1 rounded-lg">
+                        {unreadCount} new
+                      </span>
+                    )}
+
+                    <span
+                      className={`text-sm px-2 py-1 rounded-lg ${
+                        ticket.status === "open"
+                          ? "bg-green-100 text-green-700"
+                          : ticket.status === "waiting"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {ticket.status}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-gray-500 text-sm">{ticket.userEmail}</p>
+
+                <p className="text-gray-500 text-sm mt-1">
+                  Updated:{" "}
+                  {ticket.updatedAt
+                    ? new Date(ticket.updatedAt).toLocaleString()
+                    : "—"}
+                </p>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </DashboardLayout>
   );
 }

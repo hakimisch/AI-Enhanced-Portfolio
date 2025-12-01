@@ -1,25 +1,38 @@
 // src/app/api/artist/products/route.js
 
+
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import dbConnect from "@/app/libs/mongoose";
 import Product from "@/app/models/Product";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
-import { NextResponse } from "next/server";
 
-// --- GET: Fetch only the logged-in artist's products ---
-export async function GET() {
+export async function GET(req) {
   await dbConnect();
 
+  // 🔐 Validate artist login
   const session = await getServerSession(authOptions);
+
   if (!session?.user?.email) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { message: "Unauthorized — please log in" },
+      { status: 401 }
+    );
   }
 
+  const artistEmail = session.user.email;
+
   try {
-    const products = await Product.find({ artistEmail: session.user.email }).sort({ createdAt: -1 });
+    // 🎯 Return ONLY the logged-in artist’s products
+    const products = await Product.find({ artistEmail })
+      .sort({ createdAt: -1 })
+      .lean();
+
     return NextResponse.json(products);
   } catch (err) {
-    console.error("GET /api/artist/products error:", err.message);
-    return NextResponse.json({ message: err.message }, { status: 500 });
+    return NextResponse.json(
+      { message: err.message },
+      { status: 500 }
+    );
   }
 }

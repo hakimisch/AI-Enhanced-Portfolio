@@ -8,19 +8,30 @@ export async function POST(req) {
   try {
     await dbConnect();
 
-    const { message, sessionKey } = await req.json();
+    // ---------------------------------------------------
+    // 🔒 CHATBOT ENABLED CHECK (NEW)
+    // ---------------------------------------------------
+    const cfg = await ChatbotConfig.findOne();
+    if (cfg && cfg.enabled === false) {
+      return NextResponse.json({
+        response: "The chatbot is currently disabled by admin.",
+        intent: "general",
+        ended: true,
+      });
+    }
 
-    // --------------------------
+    // ---------------------------------------------------
     // SESSION IDENTIFIER
-    // --------------------------
+    // ---------------------------------------------------
+    const { message, sessionKey } = await req.json();
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0];
     const key =
       sessionKey ||
       (ip ? `anon_${ip.replace(/\./g, "_")}` : `anon_${Math.random()}`);
 
-    // --------------------------
+    // ---------------------------------------------------
     // LOAD SESSION
-    // --------------------------
+    // ---------------------------------------------------
     let session = await ChatSession.findOne({ sessionKey: key });
 
     if (!session) {
@@ -32,17 +43,17 @@ export async function POST(req) {
 
     const recentMessages = session.messages.slice(-12);
 
-    // --------------------------
+    // ---------------------------------------------------
     // SET UP GEMINI
-    // --------------------------
+    // ---------------------------------------------------
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash",
     });
 
-    // --------------------------
+    // ---------------------------------------------------
     // LOAD CONFIG + BUILD SYSTEM MESSAGE
-    // --------------------------
+    // ---------------------------------------------------
     const config = await ChatbotConfig.findOne();
 
     const configSystemPrompt =
@@ -54,7 +65,6 @@ export async function POST(req) {
         ?.map((f) => `Q: ${f.question}\nA: ${f.answer}`)
         .join("\n\n") || "";
 
-    // old rules merged into config system prompt
     const intentRules = `
 Rules:
 1. Answer concisely.
@@ -92,9 +102,9 @@ ${faqText}
       ],
     };
 
-    // --------------------------
+    // ---------------------------------------------------
     // FORMAT HISTORY FOR GEMINI
-    // --------------------------
+    // ---------------------------------------------------
     const formattedHistory = recentMessages.map((msg) => ({
       role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content }],
@@ -104,9 +114,9 @@ ${faqText}
       history: [systemMessage, ...formattedHistory],
     });
 
-    // --------------------------
-    // CUT OFF TOO-LONG CHATS
-    // --------------------------
+    // ---------------------------------------------------
+    // CUTOFF FOR LONG SESSIONS
+    // ---------------------------------------------------
     if (recentMessages.length >= 12) {
       return NextResponse.json({
         response: "This session has ended. Please contact support or an artist.",
@@ -115,22 +125,31 @@ ${faqText}
       });
     }
 
-    // --------------------------
+    // ---------------------------------------------------
     // SEND MESSAGE TO LLM
-    // --------------------------
+    // ---------------------------------------------------
     const result = await chat.sendMessage(message);
     const raw = result.response.text().trim();
 
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
+    // --- Extract JSON inside ANY messy output ---
+    let parsed = null;
+
+    // Find JSON object inside the string
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+
+    if (jsonMatch) {
+      try {
+        parsed = JSON.parse(jsonMatch[0]);
+      } catch (e) {
+        parsed = { reply: raw, intent: "general" };
+      }
+    } else {
       parsed = { reply: raw, intent: "general" };
     }
 
-    // --------------------------
+    // ---------------------------------------------------
     // SAVE MESSAGES TO DATABASE
-    // --------------------------
+    // ---------------------------------------------------
     session.messages.push({ role: "user", content: message });
     session.messages.push({
       role: "assistant",
@@ -139,16 +158,16 @@ ${faqText}
     });
     await session.save();
 
-    // --------------------------
+    // ---------------------------------------------------
     // AUTO-CLEAN OLD SESSIONS
-    // --------------------------
+    // ---------------------------------------------------
     ChatSession.deleteMany({
       updatedAt: { $lt: new Date(Date.now() - 48 * 60 * 60 * 1000) },
     }).catch(() => {});
 
-    // --------------------------
-    // SEND RESPONSE TO FRONTEND
-    // --------------------------
+    // ---------------------------------------------------
+    // RETURN TO FRONTEND
+    // ---------------------------------------------------
     return NextResponse.json({
       response: parsed.reply,
       intent: parsed.intent,

@@ -56,8 +56,8 @@ export async function POST(req) {
       price: Number(data.price),
       countInStock: Number(data.countInStock),
       description: data.description,
-      artistName: data.artistName || '', // ✅ ensure artist info is stored
-      artistEmail: data.artistEmail || '',
+      artistName: data.artistName,
+      artistEmail: data.artistEmail,
     });
 
     return NextResponse.json(product, { status: 201 });

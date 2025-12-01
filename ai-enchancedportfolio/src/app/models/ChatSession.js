@@ -2,14 +2,14 @@ import mongoose from "mongoose";
 
 const ChatSessionSchema = new mongoose.Schema(
   {
-    sessionKey: { type: String, required: true }, // email OR random anonymous id
+    sessionKey: { type: String, required: true },
     messages: [
       {
-        role: String,     // "user" | "assistant"
-        content: String,  // the message
-        intent: String,   // optional
-        timestamp: { type: Date, default: Date.now }
-      }
+        role: String,
+        content: String,
+        intent: { type: String, default: "general" },
+        timestamp: { type: Date, default: Date.now },
+      },
     ],
   },
   { timestamps: true }

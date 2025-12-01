@@ -3,12 +3,14 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import DashboardLayout from "components/DashboardLayout";
 
 export default function ArtistProductsPage() {
+  const { data: session, status } = useSession(); 
   const pathname = usePathname();
   const fileInputRef = useRef(null);
 
@@ -26,10 +28,12 @@ export default function ArtistProductsPage() {
   const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // ✅ Fetch all products
+
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (status === "authenticated") {
+      fetchProducts();
+    }
+  }, [status]);
 
   const fetchProducts = async () => {
     try {
@@ -41,21 +45,32 @@ export default function ArtistProductsPage() {
     }
   };
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const handleChange = (e) =>
+      setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!session?.user?.email) {
+      alert("You must be logged in as an artist.");
+      return;
+    }
 
     const url = editing
       ? `/api/products/${form._id}`
       : "/api/products";
     const method = editing ? "PUT" : "POST";
 
+    const body = {
+      ...form,
+      artistEmail: session.user.email,
+      artistName: session.user.name,
+    };
+
     await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(body),
     });
 
     setForm({
@@ -67,9 +82,11 @@ export default function ArtistProductsPage() {
       countInStock: "",
       description: "",
     });
+
     setEditing(false);
     fetchProducts();
   };
+
 
   const handleEdit = (product) => {
     setForm(product);

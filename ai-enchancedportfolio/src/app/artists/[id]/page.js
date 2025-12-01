@@ -102,6 +102,16 @@ export default async function ArtistProfile({ params }) {
           )}
         </div>
 
+        {/*Contact*/}
+        <div className="text-center mt-4">
+          <Link
+            href={`/artists/${encodeURIComponent(artist.email)}/contact`}
+            className="inline-block bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+          >
+            Contact This Artist
+          </Link>
+        </div>
+
         {/* About Me */}
         <div className="mb-10">
           <h2 className="text-2xl font-semibold mb-3">About Me</h2>

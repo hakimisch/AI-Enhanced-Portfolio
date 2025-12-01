@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import ChatSession from "@/app/models/ChatSession";
 import dbConnect from "@/app/libs/mongoose";
+import ChatSession from "@/app/models/ChatSession";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-export async function GET() {
+export async function GET(req) {
   await dbConnect();
 
   const session = await getServerSession(authOptions);
@@ -12,42 +12,47 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  // Total conversations
+  // Basic numbers
   const totalSessions = await ChatSession.countDocuments();
+  const sessions = await ChatSession.find().lean();
 
-  // Unique users
-  const uniqueUsers = await ChatSession.distinct("sessionKey");
+  let totalMessages = 0;
+  let intentCounts = { artist: 0, admin: 0, general: 0 };
+  let questionCounts = {};
 
-  // Intent distribution
-  const intents = await ChatSession.aggregate([
-    { $unwind: "$messages" },
-    { $match: { "messages.role": "assistant" } },
-    {
-      $group: {
-        _id: "$messages.intent",
-        count: { $sum: 1 }
+  sessions.forEach((s) => {
+    s.messages.forEach((msg) => {
+      totalMessages++;
+      // Count intents
+      if (msg.intent) {
+        intentCounts[msg.intent] = (intentCounts[msg.intent] || 0) + 1;
       }
-    }
-  ]);
-
-  // Popular questions (top 10)
-  const popularQuestions = await ChatSession.aggregate([
-    { $unwind: "$messages" },
-    { $match: { "messages.role": "user" } },
-    {
-      $group: {
-        _id: "$messages.content",
-        count: { $sum: 1 }
+      // Count user questions
+      if (msg.role === "user") {
+        const normalized = msg.content.toLowerCase().trim();
+        questionCounts[normalized] = (questionCounts[normalized] || 0) + 1;
       }
-    },
-    { $sort: { count: -1 } },
-    { $limit: 10 }
-  ]);
+    });
+  });
+
+  // Sort top questions
+  const topQuestions = Object.entries(questionCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([question, count]) => ({ question, count }));
+
+  // Usage timeline (last 30 days)
+  const timeline = sessions.reduce((acc, s) => {
+    const d = new Date(s.createdAt).toISOString().slice(0, 10);
+    acc[d] = (acc[d] || 0) + 1;
+    return acc;
+  }, {});
 
   return NextResponse.json({
     totalSessions,
-    uniqueUsers: uniqueUsers.length,
-    intents,
-    popularQuestions
+    totalMessages,
+    intentCounts,
+    topQuestions,
+    timeline,
   });
 }

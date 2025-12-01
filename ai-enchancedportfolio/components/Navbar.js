@@ -19,7 +19,7 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white shadow-md px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-      <h1 className="text-xl font-bold text-gray-800">🎨 Artfolio</h1>
+      <h1 className="text-xl font-bold text-gray-800">🎨 ArtSpace</h1>
 
       <div className="flex items-center space-x-4">
         <Link href="/" className="text-gray-700 hover:text-blue-500">Home</Link>
@@ -39,6 +39,8 @@ export default function Navbar() {
             Admin
           </Link>
         )}
+
+        <Link href="/contact/support" className="text-gray-700 hover:text-blue-500">Support</Link>
 
         {status === "authenticated" ? (
           <>

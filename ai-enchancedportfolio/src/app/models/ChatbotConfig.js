@@ -13,6 +13,8 @@ const ChatbotConfigSchema = new mongoose.Schema(
         answer: String,
       },
     ],
+    temperature: { type: Number, default: 0.6 },
+    enabled: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
