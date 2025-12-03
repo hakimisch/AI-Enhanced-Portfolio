@@ -18,27 +18,32 @@ export default function ProductItem({ product }) {
   };
 
   return (
-    <div className="card">
+    <div className="card-soft overflow-hidden">
       <Link href={`/e-commerce/${product._id}`}>
         <img
           src={product.image}
           alt={product.name}
-          className="rounded shadow object-cover h-64 w-full"
+          className="rounded-t-xl object-cover h-64 w-full"
         />
       </Link>
+
       <div className="flex flex-col items-center justify-center p-5 text-center">
         <Link href={`/e-commerce/${product._id}`}>
           <h2 className="text-lg font-semibold">{product.name}</h2>
         </Link>
+
         <p className="text-gray-600 text-sm italic mb-1">
           by {product.artistName || "Unknown Artist"}
         </p>
-        <p className="text-gray-700 mb-2">{product.category}</p>
-        <p className="font-medium">RM{product.price}</p>
+
+        <p className="text-gray-700 text-sm mb-1">{product.category}</p>
+
+        <p className="font-bold text-lg mb-3">RM{product.price}</p>
+
         <button
-          className="primary-button mt-2"
           type="button"
           onClick={addToCartHandler}
+          className="btn-gradient w-full"
         >
           Add to Cart
         </button>

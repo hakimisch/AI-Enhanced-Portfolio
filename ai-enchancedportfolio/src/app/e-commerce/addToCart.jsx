@@ -1,3 +1,5 @@
+//src/app/e-commerce/addToCart.jsx
+
 'use client';
 
 import { useStore } from '@/context/StoreContext';

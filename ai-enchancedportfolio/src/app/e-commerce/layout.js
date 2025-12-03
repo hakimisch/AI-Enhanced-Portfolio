@@ -1,3 +1,5 @@
+//src/app/e-commerce/layout.js
+
 'use client';
 
 import { StoreProvider } from "../context/StoreContext";

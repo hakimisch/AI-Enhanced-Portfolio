@@ -1,12 +1,18 @@
+//src/app/api/ordeers/[id]/
+
 import dbConnect from "@/app/libs/mongoose";
 import Order from "@/app/models/Order";
 import { NextResponse } from "next/server";
 
-export async function GET(req, { params }) {
+export async function GET(req, ctx) {
   await dbConnect();
+
+  const params = await ctx.params; 
+
   const order = await Order.findById(params.id);
   if (!order) {
     return NextResponse.json({ message: "Order not found" }, { status: 404 });
   }
+
   return NextResponse.json(order);
 }
