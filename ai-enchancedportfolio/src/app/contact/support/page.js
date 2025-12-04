@@ -18,31 +18,26 @@ export default function SupportPage() {
     userEmail: "",
   });
 
-  // ★ Update newTicket email automatically
   useEffect(() => {
     if (session?.user?.email) {
       setNewTicket((t) => ({ ...t, userEmail: session.user.email }));
     }
   }, [session]);
 
-  // ★ FIX: Load ticket list on page load
   useEffect(() => {
     loadTickets();
   }, []);
 
-  const loadTickets = async () => {
+  async function loadTickets() {
     const res = await fetch("/api/support");
     const data = await res.json();
 
-    // ★ Only show THIS user's tickets
     if (session?.user?.email) {
       setTickets(data.tickets.filter((t) => t.userEmail === session.user.email));
-    } else {
-      setTickets([]);
-    }
-  };
+    } else setTickets([]);
+  }
 
-  const submitTicket = async (e) => {
+  async function submitTicket(e) {
     e.preventDefault();
     setCreating(true);
 
@@ -61,40 +56,48 @@ export default function SupportPage() {
     });
 
     loadTickets();
-  };
+  }
 
   return (
     <>
       <Navbar />
+      
+     <div className="relative overflow-hidden bg-gradient-to-b from-purple-50 to-white"/>
 
-      <div className="max-w-3xl mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-6">Support Center</h1>
+      <div className="max-w-3xl mx-auto px-6 py-10">
+        
 
-        {/* Create Ticket */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+        {/* HEADER */}
+        <div className="relative mb-10">
+          <div className="w-full h-40 rounded-2xl bg-gradient-to-br from-blue-200 to-indigo-100 shadow-lg" />
+          <h1 className="absolute left-6 bottom-6 text-3xl font-extrabold text-gray-900 drop-shadow">
+            Support Center
+          </h1>
+        </div>
+
+        {/* CREATE TICKET */}
+        <div className="bg-white rounded-2xl shadow p-6 mb-10">
           <h2 className="text-xl font-semibold mb-4">Create a Ticket</h2>
 
           <form onSubmit={submitTicket} className="space-y-4">
             <input
-              type="email"
-              value={newTicket.userEmail}
-              placeholder="Your Email"
-              className="w-full rounded-lg p-3 border border-gray-200"
               disabled
+              value={newTicket.userEmail}
+              className="w-full p-3 rounded-lg border border-gray-200 bg-gray-50"
             />
 
             <input
               placeholder="Subject"
-              className="w-full rounded-lg p-3 border border-gray-200"
+              required
+              className="w-full p-3 rounded-lg border border-gray-200"
               value={newTicket.subject}
               onChange={(e) =>
                 setNewTicket({ ...newTicket, subject: e.target.value })
               }
-              required
             />
 
             <select
-              className="w-full rounded-lg p-3 border border-gray-200"
+              className="w-full p-3 rounded-lg border border-gray-200"
               value={newTicket.category}
               onChange={(e) =>
                 setNewTicket({ ...newTicket, category: e.target.value })
@@ -108,24 +111,35 @@ export default function SupportPage() {
 
             <textarea
               placeholder="Describe your issue..."
-              className="w-full rounded-lg p-3 border border-gray-200 h-32"
+              required
+              className="w-full p-3 rounded-lg border border-gray-200 h-32"
               value={newTicket.message}
               onChange={(e) =>
                 setNewTicket({ ...newTicket, message: e.target.value })
               }
-              required
             />
 
             <button
               disabled={creating}
-              className="bg-blue-600 text-white w-full py-3 rounded-lg hover:bg-blue-700"
+              className="
+                w-full 
+                py-3 
+                rounded-xl 
+                text-white 
+                bg-gradient-to-r 
+                from-blue-600 
+                to-indigo-600 
+                hover:-translate-y-0.5 
+                hover:shadow-lg 
+                transition-all
+              "
             >
               {creating ? "Submitting..." : "Submit Ticket"}
             </button>
           </form>
         </div>
 
-        {/* Ticket List */}
+        {/* TICKET LIST */}
         <h2 className="text-2xl font-bold mb-4">My Tickets</h2>
 
         <div className="space-y-4">
@@ -133,18 +147,18 @@ export default function SupportPage() {
             <p className="text-gray-500 italic">No tickets yet.</p>
           )}
 
-          {tickets.map((ticket) => (
+          {tickets.map((t) => (
             <a
-              key={ticket._id}
-              href={`/support/${ticket._id}`}
-              className="block bg-white rounded-xl shadow-sm p-5 hover:shadow-md transition"
+              key={t._id}
+              href={`/support/${t._id}`}
+              className="block bg-white rounded-xl shadow p-5 hover:shadow-md hover:-translate-y-0.5 transition"
             >
               <div className="flex justify-between">
-                <h3 className="font-semibold">{ticket.subject}</h3>
-                <span className="text-sm text-gray-500">{ticket.status}</span>
+                <h3 className="font-semibold">{t.subject}</h3>
+                <span className="text-sm text-gray-500">{t.status}</span>
               </div>
               <p className="text-gray-600 text-sm mt-1">
-                Updated: {new Date(ticket.updatedAt).toLocaleString()}
+                Updated: {new Date(t.updatedAt).toLocaleString()}
               </p>
             </a>
           ))}

@@ -18,32 +18,38 @@ export default function ProductItem({ product }) {
   };
 
   return (
-    <div className="card-soft overflow-hidden">
+    <div className="rounded-2xl overflow-hidden bg-white shadow hover:shadow-xl transition-all hover:-translate-y-1 border border-gray-100">
       <Link href={`/e-commerce/${product._id}`}>
         <img
           src={product.image}
           alt={product.name}
-          className="rounded-t-xl object-cover h-64 w-full"
+          className="w-full h-64 object-cover"
         />
       </Link>
 
-      <div className="flex flex-col items-center justify-center p-5 text-center">
+      <div className="p-5 text-center">
         <Link href={`/e-commerce/${product._id}`}>
-          <h2 className="text-lg font-semibold">{product.name}</h2>
+          <h2 className="text-lg font-semibold text-gray-800 hover:text-blue-600 transition">
+            {product.name}
+          </h2>
         </Link>
 
-        <p className="text-gray-600 text-sm italic mb-1">
+        <p className="text-gray-500 text-sm mb-1">
           by {product.artistName || "Unknown Artist"}
         </p>
 
-        <p className="text-gray-700 text-sm mb-1">{product.category}</p>
+        <p className="text-gray-600 text-xs uppercase tracking-wide mb-2">
+          {product.category}
+        </p>
 
-        <p className="font-bold text-lg mb-3">RM{product.price}</p>
+        <p className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text mb-4">
+          RM{product.price}
+        </p>
 
         <button
           type="button"
           onClick={addToCartHandler}
-          className="btn-gradient w-full"
+          className="w-full py-2 rounded-lg text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 shadow-md"
         >
           Add to Cart
         </button>

@@ -84,16 +84,34 @@ export default function ProductBrowser({ initialProducts }) {
 
   return (
     <div className="w-full">
-      {/* FILTER BAR */}
-      <div className="p-4 mb-8 bg-white rounded-xl shadow-md border border-gray-100">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+
+      {/* FILTER BAR - upgraded, polished, aesthetic */}
+      <div className="
+        mb-10 p-6 rounded-2xl relative overflow-hidden 
+        border border-gray-200 
+        shadow-[0_4px_30px_rgba(0,0,0,0.05)]
+        bg-white/70 backdrop-blur-xl
+      ">
+
+        {/* Glow accents */}
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-200/40 rounded-full blur-3xl" />
+        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-pink-200/40 rounded-full blur-3xl" />
+        
+        <div className="relative grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+
           {/* Search */}
           <div className="flex flex-col">
-            <label className="text-sm text-gray-600 mb-1">Search</label>
+            <label className="text-sm text-gray-700 font-medium mb-1">Search</label>
             <input
               type="text"
               placeholder="Search products..."
-              className="border border-gray-300 p-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
+              className="
+                border border-gray-300 p-3 rounded-xl 
+                shadow-sm 
+                bg-white/60 backdrop-blur 
+                focus:ring-2 focus:ring-purple-400 
+                transition
+              "
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -101,9 +119,15 @@ export default function ProductBrowser({ initialProducts }) {
 
           {/* Category */}
           <div className="flex flex-col">
-            <label className="text-sm text-gray-600 mb-1">Category</label>
+            <label className="text-sm text-gray-700 font-medium mb-1">Category</label>
             <select
-              className="border border-gray-300 p-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
+              className="
+                border border-gray-300 p-3 rounded-xl 
+                shadow-sm 
+                bg-white/60 backdrop-blur 
+                focus:ring-2 focus:ring-purple-400 
+                transition
+              "
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
@@ -116,13 +140,13 @@ export default function ProductBrowser({ initialProducts }) {
             </select>
           </div>
 
-          {/* Price slider */}
+          {/* Price Slider */}
           <div className="flex flex-col md:col-span-2">
-            <label className="text-sm text-gray-600 mb-1">
+            <label className="text-sm text-gray-700 font-medium mb-1">
               Price (RM{priceRange[0]} - RM{priceRange[1]})
             </label>
 
-            <div className="px-1 py-1">
+            <div className="px-2 py-1">
               {maxPrice > 0 ? (
                 <Range
                   step={1}
@@ -133,10 +157,10 @@ export default function ProductBrowser({ initialProducts }) {
                   renderTrack={({ props, children }) => (
                     <div
                       {...props}
-                      className="h-1.5 w-full bg-gray-200 rounded-full cursor-pointer"
+                      className="h-2 w-full bg-gray-200 rounded-full cursor-pointer relative"
                     >
                       <div
-                        className="h-1.5 bg-blue-500 rounded-full"
+                        className="h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
                         style={{
                           marginLeft: `${(priceRange[0] / maxPrice) * 100}%`,
                           width: `${((priceRange[1] - priceRange[0]) / maxPrice) * 100}%`,
@@ -151,7 +175,11 @@ export default function ProductBrowser({ initialProducts }) {
                       <div
                         key={key}
                         {...thumbProps}
-                        className="h-4 w-4 bg-white border border-blue-500 rounded-full shadow-md"
+                        className="
+                          h-5 w-5 bg-white border border-purple-500 
+                          rounded-full shadow 
+                          
+                        "
                       />
                     );
                   }}
@@ -166,18 +194,25 @@ export default function ProductBrowser({ initialProducts }) {
           <div className="flex justify-end">
             <button
               onClick={resetFilters}
-              className="h-11 px-5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg shadow-sm transition font-medium"
+              className="
+                h-11 px-6 rounded-xl 
+                bg-gradient-to-r from-gray-100 to-gray-200 
+                text-gray-700 shadow-sm 
+                hover:shadow-md hover:-translate-y-0.5 
+                transition font-medium
+              "
             >
               Reset
             </button>
           </div>
+
         </div>
       </div>
 
-      {/* Product List */}
+      {/* PRODUCT LIST */}
       {loading ? (
         <div className="flex justify-center items-center h-32">
-          <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-gray-300 border-t-purple-500 rounded-full animate-spin" />
         </div>
       ) : products.length === 0 ? (
         <p className="text-gray-500 text-center mt-10">

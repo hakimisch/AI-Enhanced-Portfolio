@@ -70,101 +70,120 @@ export default function ArtistBlogs() {
 
   return (
     <DashboardLayout>
-    <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Manage Blog Posts</h1>
+      <div className="p-8 max-w-4xl mx-auto">
 
-      {message && <p className="mb-4 text-green-600">{message}</p>}
+        <h1 className="text-3xl font-semibold mb-6">Manage Blog Posts</h1>
 
-      {/* 📝 Create / Edit Form */}
-      <form onSubmit={handleSubmit} className="mb-8">
-        <input
-          type="text"
-          placeholder="Post title"
-          className="w-full mb-2 p-2 border rounded"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-
-        <textarea
-          placeholder="Write your blog content..."
-          className="w-full mb-2 p-2 border rounded h-40"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-        />
-
-        <input
-          type="file"
-          accept="image/*"
-          className="w-full mb-4"
-          onChange={(e) => setImage(e.target.files[0])}
-        />
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          {editing ? "Update Post" : "Create Post"}
-        </button>
-
-        {editing && (
-          <button
-            type="button"
-            onClick={() => {
-              setEditing(null);
-              setTitle("");
-              setContent("");
-              setImage(null);
-            }}
-            className="ml-3 text-gray-600 underline"
-          >
-            Cancel
-          </button>
+        {message && (
+          <p className="mb-4 text-green-600 font-medium bg-green-50 p-3 rounded-lg border border-green-200">
+            {message}
+          </p>
         )}
-      </form>
 
-      {/* 🗂️ Post List */}
-      <h2 className="text-xl font-semibold mb-4">Your Posts</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {posts.map((post) => (
-          <div key={post._id} className="border rounded shadow p-4">
-            {post.imageUrl && (
-              <Image
-                src={post.imageUrl}
-                alt={post.title}
-                width={400}
-                height={160}
-                className="w-full h-40 object-cover rounded"
-              />
-            )}
-            <h3 className="font-medium mt-2">{post.title}</h3>
-            <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-              {post.content.slice(0, 80)}...
-            </p>
+        {/* FORM */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-6 rounded-xl shadow border border-gray-200 mb-10 space-y-4"
+        >
+          <input
+            type="text"
+            placeholder="Post title"
+            className="w-full p-3 rounded-lg shadow border border-gray-200 focus:ring-2 focus:ring-blue-400"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
 
-            <div className="flex justify-between text-sm text-gray-500">
-              <button
-                onClick={() => {
-                  setEditing(post._id);
-                  setTitle(post.title);
-                  setContent(post.content);
-                }}
-                className="text-blue-600 hover:underline"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(post._id)}
-                className="text-red-600 hover:underline"
-              >
-                Delete
-              </button>
-            </div>
+          <textarea
+            placeholder="Write your blog content..."
+            className="w-full p-3 rounded-lg shadow border border-gray-200 h-40 focus:ring-2 focus:ring-blue-400"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+          />
+
+          <div>
+            <label className="block mb-1 text-gray-700 font-medium">Upload Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              className="w-full p-2 bg-gray-50 rounded-lg shadow border border-gray-200"
+              onChange={(e) => setImage(e.target.files[0])}
+            />
           </div>
-        ))}
+
+          <div className="flex items-center gap-4">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+            >
+              {editing ? "Update Post" : "Create Post"}
+            </button>
+
+            {editing && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing(null);
+                  setTitle("");
+                  setContent("");
+                  setImage(null);
+                }}
+                className="text-gray-600 hover:text-gray-800 underline"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+
+        {/* POSTS LIST */}
+        <h2 className="text-2xl font-semibold mb-4">Your Posts</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {posts.map((post) => (
+            <div
+              key={post._id}
+              className="bg-white rounded-xl shadow hover:shadow-lg border border-gray-200 p-4 transition group"
+            >
+              {post.imageUrl && (
+                <Image
+                  src={post.imageUrl}
+                  alt={post.title}
+                  width={400}
+                  height={160}
+                  className="w-full h-40 object-cover rounded-lg mb-3 group-hover:scale-[1.02] transition"
+                />
+              )}
+
+              <h3 className="font-semibold text-lg mb-1">{post.title}</h3>
+              <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+                {post.content}
+              </p>
+
+              <div className="flex justify-between text-sm">
+                <button
+                  onClick={() => {
+                    setEditing(post._id);
+                    setTitle(post.title);
+                    setContent(post.content);
+                  }}
+                  className="text-blue-600 hover:underline"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(post._id)}
+                  className="text-red-600 hover:underline"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
       </div>
-    </div>
     </DashboardLayout>
   );
 }

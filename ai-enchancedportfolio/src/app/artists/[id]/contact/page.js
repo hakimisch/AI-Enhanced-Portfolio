@@ -1,5 +1,3 @@
-//artists/[id]/contact/page.js
-
 "use client";
 
 import { useParams } from "next/navigation";
@@ -8,10 +6,15 @@ import { useSession } from "next-auth/react";
 import Navbar from "components/Navbar";
 
 export default function ContactArtistPage() {
-    const params = useParams();
-    const { data: session } = useSession();
+  const params = useParams();
+  const { data: session } = useSession();
 
   const artistEmail = decodeURIComponent(params.id);
+
+  const [artist, setArtist] = useState(null);
+  const [tickets, setTickets] = useState([]);
+
+  const [success, setSuccess] = useState(false);
 
   const [form, setForm] = useState({
     userEmail: "",
@@ -26,74 +29,190 @@ export default function ContactArtistPage() {
     }
   }, [session]);
 
-  const sendMessage = async (e) => {
+  useEffect(() => {
+    async function loadArtist() {
+      const res = await fetch(`/api/artist-profile?email=${artistEmail}`);
+      const data = await res.json();
+      setArtist(data.artist || null);
+    }
+    loadArtist();
+  }, [artistEmail]);
+
+  // fetch previous tickets
+  useEffect(() => {
+    async function loadTickets() {
+      if (!session?.user?.email) return;
+      const res = await fetch("/api/artist-support");
+      const data = await res.json();
+
+      const filtered = data.tickets.filter(
+        (t) =>
+          t.artistEmail === artistEmail &&
+          t.userEmail === session.user.email
+      );
+
+      setTickets(filtered);
+    }
+    loadTickets();
+  }, [session, artistEmail]);
+
+  async function sendMessage(e) {
     e.preventDefault();
 
     await fetch("/api/artist-support", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        artistEmail,
-      }),
+      body: JSON.stringify({ ...form, artistEmail }),
     });
 
-    alert("Message sent!");
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
+
     setForm({
       userEmail: session?.user?.email || "",
       subject: "",
       category: "commission",
       message: "",
     });
-  };
+  }
 
   return (
     <>
       <Navbar />
 
-      <div className="max-w-xl mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-6">Contact This Artist</h1>
+      <div className="max-w-3xl mx-auto px-6 py-10">
+        {/* HEADER */}
+        <div className="relative mb-10">
+          <div className="w-full h-40 rounded-2xl bg-gradient-to-br from-purple-200 via-pink-100 to-white shadow-lg" />
 
-        <form onSubmit={sendMessage} className="space-y-4 bg-white p-6 rounded-lg shadow">
-          <input
-            type="email"
-            value={form.userEmail}
-            disabled
-            className="w-full border p-3 rounded"
-            placeholder="Your Email"
-          />
+          {artist && (
+            <div className="absolute -bottom-10 left-6 flex items-center gap-4">
+              {/* Profile ring */}
+              <div className="relative w-20 h-20 group">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 p-[3px] shadow-lg">
+                  <div className="w-full h-full rounded-full overflow-hidden bg-black/20">
+                    {artist.profileImage ? (
+                      <img
+                        src={artist.profileImage}
+                        className="w-full h-full object-cover"
+                        alt={artist.username}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xl font-bold bg-gray-300 text-gray-700 rounded-full">
+                        {artist.username?.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-          <input
-            value={form.subject}
-            onChange={(e) => setForm({ ...form, subject: e.target.value })}
-            placeholder="Subject"
-            required
-            className="w-full border p-3 rounded"
-          />
+              <div className="mt-8">
+                <h1 className="text-3xl font-bold">{artist.username}</h1>
+                <p className="text-gray-600 text-sm">{artistEmail}</p>
+              </div>
+            </div>
+          )}
+        </div>
 
-          <select
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
-            className="w-full border p-3 rounded"
-          >
-            <option value="commission">Commission</option>
-            <option value="rates">Rates</option>
-            <option value="product">Product Inquiry</option>
-            <option value="general">General</option>
-          </select>
+        {/* CONTACT FORM */}
+        <div className="bg-white rounded-2xl shadow p-6 mt-16">
+          <h2 className="text-xl font-semibold mb-4">Contact This Artist</h2>
 
-          <textarea
-            value={form.message}
-            onChange={(e) => setForm({ ...form, message: e.target.value })}
-            placeholder="Message"
-            required
-            className="w-full border p-3 rounded h-32"
-          />
+          <form onSubmit={sendMessage} className="space-y-4">
+            <input
+              type="email"
+              disabled
+              value={form.userEmail}
+              className="w-full border border-gray-200 p-3 rounded-lg bg-gray-50"
+            />
 
-          <button className="bg-blue-600 text-white p-3 w-full rounded hover:bg-blue-700">
-            Send Message
-          </button>
-        </form>
+            <input
+              value={form.subject}
+              onChange={(e) =>
+                setForm({ ...form, subject: e.target.value })
+              }
+              placeholder="Subject"
+              required
+              className="w-full border border-gray-200 p-3 rounded-lg"
+            />
+
+            <select
+              value={form.category}
+              onChange={(e) =>
+                setForm({ ...form, category: e.target.value })
+              }
+              className="w-full border p-3 rounded-lg border-gray-200"
+            >
+              <option value="commission">Commission</option>
+              <option value="rates">Rates</option>
+              <option value="product">Product Inquiry</option>
+              <option value="general">General</option>
+            </select>
+
+            <textarea
+              value={form.message}
+              onChange={(e) =>
+                setForm({ ...form, message: e.target.value })
+              }
+              required
+              placeholder="Message"
+              className="w-full border p-3 rounded-lg h-32 border-gray-200"
+            />
+
+            <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 w-full rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition">
+              Send Message
+            </button>
+          </form>
+        </div>
+
+        {/* Success banner */}
+        {success && (
+          <div className="fixed bottom-6 right-6 px-6 py-4 rounded-xl shadow-lg bg-green-600 text-white animate-slideIn">
+            Message sent successfully!
+          </div>
+        )}
+
+        <style jsx>{`
+          .animate-slideIn {
+            animation: slideIn 0.4s ease forwards;
+          }
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}</style>
+
+        {/* TICKETS */}
+        <h2 className="text-2xl font-bold mt-10 mb-4">My Messages</h2>
+
+        <div className="space-y-4">
+          {tickets.length === 0 && (
+            <p className="text-gray-500 italic">No messages yet.</p>
+          )}
+
+          {tickets.map((ticket) => (
+            <div
+              key={ticket._id}
+              className="bg-white p-4 rounded-xl shadow hover:shadow-md transition"
+            >
+              <div className="flex justify-between">
+                <h3 className="font-semibold">{ticket.subject}</h3>
+                <span className="text-sm text-gray-500">
+                  {ticket.status || "open"}
+                </span>
+              </div>
+              <p className="text-gray-600 text-sm mt-1">
+                Updated: {new Date(ticket.updatedAt).toLocaleString()}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </>
   );

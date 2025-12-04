@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema({
   profileImage: { type: String, default: "" },
   aboutMe: { type: String, default: "" },
   profileImage: { type: String, default: "" },
+  cvUrl: { type: String, default: "" },
   socialLinks: {
     instagram: { type: String, default: "" },
     twitter: { type: String, default: "" },

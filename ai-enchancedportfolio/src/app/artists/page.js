@@ -23,58 +23,111 @@ export default function ArtistsPage() {
   }, []);
 
   return (
-    <div>
+    <div className="bg-gradient-to-b from-purple-50 to-white">
+      {/* GLOBAL FLOATING BACKGROUND BLOBS */}
+      <div className="pointer-events-none absolute top-[-100px] right-[-100px] w-[400px] h-[400px] bg-purple-300/40 rounded-full blur-[130px] animate-pulse-slow" />
+      <div className="pointer-events-none absolute bottom-[-120px] left-[-120px] w-[450px] h-[450px] bg-rose-300/40 rounded-full blur-[140px] animate-pulse-slower" />
+      
       <Navbar />
-      <div className="p-8 max-w-6xl mx-auto">
-        <h1 className="text-3xl font-semibold text-center mb-8">Our Artists</h1>
+
+      <div className="px-6 py-12 max-w-7xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-center mb-12">
+          Meet Our Artists
+        </h1>
 
         {artists.length === 0 ? (
           <p className="text-center text-gray-500">No artists found yet.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
             {artists.map((artist) => (
               <Link
                 key={artist.email}
                 href={`/artists/${encodeURIComponent(artist.email)}`}
-                className="group block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden"
+                className="
+                  group 
+                  bg-white 
+                  rounded-2xl 
+                  shadow 
+                  hover:shadow-xl 
+                  transition-all 
+                  overflow-hidden
+                "
               >
-                {/* Profile image */}
-                <div className="relative w-full flex justify-center pt-6 pb-2 bg-gray-50">
-                  {artist.profileImage ? (
+                {/* TOP SECTION | FLOATING PROFILE RING */}
+                <div className="relative h-40 w-full bg-gradient-to-br from-purple-100 via-pink-100 to-white">
+                  
+                  {/* Sample Artwork Preview */}
+                  {artist.sampleArt && (
                     <Image
-                      src={artist.profileImage}
-                      alt={artist.username}
-                      width={100}
-                      height={100}
-                      className="rounded-full object-cover border-4 border-white shadow-md"
+                      src={artist.sampleArt}
+                      alt="sample artwork"
+                      fill
+                      className="
+                        object-cover 
+                        opacity-50 
+                        group-hover:opacity-60 
+                      "
                     />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-3xl font-bold text-gray-600 border-4 border-white shadow-md">
-                      {artist.username?.charAt(0) || "A"}
-                    </div>
                   )}
+
+                  {/* gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/0 to-black/30" />
+
+                  {/* Floating profile */}
+                  <div className="absolute left-1/2 -bottom-10 -translate-x-1/2">
+                    <div className="relative w-24 h-24 group">
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 p-[3px] group-hover:shadow-xl transition-all">
+                        <div className="w-full h-full rounded-full overflow-hidden bg-black/20 transition-all">
+                          {artist.profileImage ? (
+                            <Image
+                              src={artist.profileImage}
+                              alt={artist.username}
+                              fill
+                              className="object-cover rounded-full"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-2xl font-bold bg-gray-300 text-gray-700 rounded-full">
+                              {artist.username?.charAt(0) || "A"}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Info Section */}
-                <div className="p-4 text-center">
-                  <h3 className="text-lg font-semibold mb-1">{artist.username}</h3>
-                  <p className="text-sm text-gray-500 mb-3 min-h-[80px]">
+                {/* BOTTOM DETAILS */}
+                <div className="pt-14 px-5 pb-6 text-center">
+                  <h3 className="text-xl font-semibold">{artist.username}</h3>
+
+                  <p className="text-gray-500 text-sm mt-1 min-h-[60px]">
                     {artist.aboutMe
-                      ? artist.aboutMe.slice(0, 80) + "..."
+                      ? artist.aboutMe.length > 100
+                        ? artist.aboutMe.slice(0, 100) + "..."
+                        : artist.aboutMe
                       : "This artist hasn't written a bio yet."}
                   </p>
 
-                  {/* Sample Artwork Preview */}
-                  {artist.sampleArt && (
-                    <div className="relative w-full aspect-square rounded-md overflow-hidden">
-                      <Image
-                        src={artist.sampleArt}
-                        alt="sample art"
-                        fill
-                        className="object-cover object-center transition-transform"
-                      />
-                    </div>
-                  )}
+                  {/* View Profile Button */}
+                  <div className="mt-4">
+                    <span
+                      className="
+                        inline-block 
+                        px-4 
+                        py-2 
+                        rounded-full 
+                        bg-gradient-to-r 
+                        from-purple-600 to-pink-600 
+                        text-white 
+                        text-sm 
+                        shadow 
+                        group-hover:shadow-lg 
+                        transition
+                      "
+                    >
+                      View Profile
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}

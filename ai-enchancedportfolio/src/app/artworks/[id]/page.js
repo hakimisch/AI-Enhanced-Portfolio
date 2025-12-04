@@ -36,13 +36,15 @@ export default async function ArtworkDetailPage({ params }) {
       <div className="flex flex-col md:flex-row items-center justify-center p-8 md:p-16 gap-8">
         {/* Image Section */}
         <div className="w-full md:w-3/4 flex justify-center">
-          <Image
-            src={artwork.imageUrl}
-            alt={artwork.title}
-            width={800}
-            height={800}
-            className="object-contain rounded-lg shadow max-h-[80vh]"
-          />
+          <div className="relative w-full max-w-7xl h-[80vh]">
+            <Image
+              src={artwork.imageUrl}
+              alt={artwork.title}
+              fill
+              className="object-contain rounded-lg"
+              sizes="100vw"
+            />
+          </div>
         </div>
 
         {/* Details Section */}
@@ -51,22 +53,22 @@ export default async function ArtworkDetailPage({ params }) {
             {artwork.title}
           </h1>
 
-          <p className="text-2xl text-gray-600 mt-2">
-            {artwork.artistName && (
-              <>
-                by <span className="font-medium">{artwork.artistName}</span>
-              </>
-            )}
-          </p>
+          <Link
+            href={`/artists/${encodeURIComponent(artwork.artistEmail)}`}
+            className="inline-block mt-2 text-gray-500 hover:text-gray-700 underline-offset-2 hover:underline transition"
+          >
+            Visit Artist Profile →
+          </Link>
+
 
           {artwork.type && (
             <p className="text-lg text-gray-500 italic">{artwork.type}</p>
           )}
 
-          <div className="mt-6">
+          <div className="mt-6 text-2xl">
             <Link
               href="/artworks"
-              className="inline-block text-gray-500 hover:text-gray-700 transition"
+              className="text-2-xl inline-block text-gray-500 hover:text-gray-700 transition"
             >
               ← Back to Gallery
             </Link>
