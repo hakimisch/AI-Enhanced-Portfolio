@@ -1,42 +1,41 @@
-//contact/support/[id]
+//src/app/artists/[id]/contact/[ticketID]/page.js
 
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Navbar from "components/Navbar";
 import Link from "next/link";
 
-export default function UserTicketPage({ params }) {
-  const { id } = use(params);
+const STATUS_STYLES = {
+  open: "bg-green-100 text-green-700",
+  waiting: "bg-yellow-100 text-yellow-700",
+  closed: "bg-gray-200 text-gray-600",
+};
+
+export default function ArtistTicketPage() {
+  const params = useParams();
   const { data: session } = useSession();
+
+  const artistEmail = decodeURIComponent(params.id);
+  const ticketID = params.ticketID;
 
   const [ticket, setTicket] = useState(null);
   const [newMsg, setNewMsg] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const STATUS_STYLES = {
-    open: "bg-green-100 text-green-700",
-    waiting: "bg-yellow-100 text-yellow-700",
-    closed: "bg-gray-200 text-gray-600",
-  };
 
   useEffect(() => {
-    if (!id) return;
+    if (!ticketID) return;
     loadTicket();
-  }, [id]);
+  }, [ticketID]);
 
   async function loadTicket() {
     setLoading(true);
-    setError("");
-
     try {
-      const res = await fetch(`/api/support/${id}`);
+      const res = await fetch(`/api/artist-support/${ticketID}`);
       const data = await res.json();
       setTicket(data.ticket);
-    } catch (err) {
-      setError("Failed to load ticket");
     } finally {
       setLoading(false);
     }
@@ -46,28 +45,24 @@ export default function UserTicketPage({ params }) {
     e.preventDefault();
     if (!newMsg.trim() || ticket.status === "closed") return;
 
-    try {
-      await fetch(`/api/support/${id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: newMsg,
-          sender: "user",
-        }),
-      });
+    await fetch(`/api/artist-support/${ticketID}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: newMsg,
+        sender: "user",
+      }),
+    });
 
-      setNewMsg("");
-      loadTicket();
-    } catch (err) {
-      console.error(err);
-    }
+    setNewMsg("");
+    loadTicket();
   }
 
   if (loading)
     return (
       <>
         <Navbar />
-        <div className="p-8">Loading...</div>
+        <div className="p-8 text-center">Loading…</div>
       </>
     );
 
@@ -75,7 +70,7 @@ export default function UserTicketPage({ params }) {
     return (
       <>
         <Navbar />
-        <div className="p-8 text-center text-gray-600">
+        <div className="p-8 text-center text-gray-500">
           Ticket not found.
         </div>
       </>
@@ -90,29 +85,30 @@ export default function UserTicketPage({ params }) {
 
           {/* Back */}
           <Link
-            href="/contact/support"
+            href={`/artists/${encodeURIComponent(artistEmail)}/contact`}
             className="text-blue-600 underline mb-4 inline-block"
           >
-            ← Back to Support
+            ← Back to Messages
           </Link>
 
           {/* Header */}
           <h1 className="text-3xl font-semibold mb-1">{ticket.subject}</h1>
-          <p className="text-gray-500 mb-1 capitalize">
+
+          <p className="text-gray-500 capitalize mb-1">
             Category: {ticket.category}
           </p>
 
-          <p className="text-gray-400 text-sm mb-2">
+          <p className="text-gray-400 text-sm mb-3">
             Created:{" "}
             {ticket.createdAt
               ? new Date(ticket.createdAt).toLocaleString()
               : "—"}
           </p>
 
-          {/* Status Badge */}
+          {/* Status */}
           <span
-            className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-6 capitalize ${
-              STATUS_STYLES[ticket.status]
+            className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-6 ${
+              STATUS_STYLES[ticket.status] || STATUS_STYLES.open
             }`}
           >
             Status: {ticket.status}
@@ -122,6 +118,7 @@ export default function UserTicketPage({ params }) {
           <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
             {(ticket.messages || []).map((msg, i) => {
               const isUser = msg.sender === "user";
+
               const date = msg.timestamp
                 ? new Date(msg.timestamp).toLocaleString()
                 : "—";
@@ -137,7 +134,7 @@ export default function UserTicketPage({ params }) {
                   >
                     <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                     <p className="text-xs text-gray-500 mt-1 text-right">
-                      {isUser ? "You" : "Support Team"} — {date}
+                      {isUser ? "You" : "Artist"} — {date}
                     </p>
                   </div>
                 </div>
@@ -145,29 +142,31 @@ export default function UserTicketPage({ params }) {
             })}
           </div>
 
-          {/* Reply Box */}
+          {/* Reply box */}
           {ticket.status !== "closed" ? (
             <form onSubmit={sendMessage} className="mt-6">
               <textarea
                 value={newMsg}
                 onChange={(e) => setNewMsg(e.target.value)}
                 className="w-full rounded-lg border p-3 h-24"
-                placeholder={
-                  ticket.status === "waiting"
-                    ? "Support replied — you can respond here..."
-                    : "Write a reply..."
-                }
+                placeholder="Write a reply..."
               />
+
               <button
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg mt-3 hover:bg-blue-700"
+                className="mt-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-lg hover:shadow-lg"
               >
                 Send Reply
               </button>
+
+              {ticket.status === "waiting" && (
+                <p className="text-xs text-gray-500 mt-2 italic">
+                  Waiting for artist response — you may still add details.
+                </p>
+              )}
             </form>
           ) : (
             <div className="mt-6 text-sm text-gray-500 italic">
-              This ticket is closed. If you need further help, please create a
-              new ticket.
+              This conversation is closed.
             </div>
           )}
         </div>

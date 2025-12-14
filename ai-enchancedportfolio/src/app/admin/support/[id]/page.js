@@ -41,28 +41,34 @@ export default function AdminTicketPage({ params }) {
   }
 
   async function sendMessage(e) {
-    e.preventDefault();
-    if (!newMsg.trim()) return;
+  e.preventDefault();
+  if (!newMsg.trim()) return;
 
-    try {
-      const res = await fetch(`/api/support/${id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: newMsg,
-          sender: "admin",
-        }),
-      });
+  try {
+    const res = await fetch(`/api/support/${id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: newMsg,
+        sender: "admin",
+      }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      setNewMsg("");
+    setNewMsg("");
+
+    if (data.ticket) {
       setTicket(data.ticket);
       setStatus(data.ticket.status);
-    } catch (err) {
-      console.error(err);
+    } else {
+      loadTicket();
     }
+  } catch (err) {
+    console.error(err);
   }
+}
+
 
   async function updateStatus(val) {
     setStatus(val);
@@ -128,28 +134,34 @@ export default function AdminTicketPage({ params }) {
 
         {/* Messages */}
         <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
-          {(ticket.messages || []).map((msg, i) => {
-            const date = msg.timestamp
-              ? new Date(msg.timestamp).toLocaleString()
-              : "—";
+  {(ticket.messages || []).map((msg, i) => {
+    const isSender = msg.sender === "admin"; // ADMIN is sender here
 
-            return (
-              <div
-                key={i}
-                className={`p-3 rounded-lg max-w-[80%] ${
-                  msg.sender === "admin"
-                    ? "bg-blue-100 text-blue-900"
-                    : "bg-gray-100 text-gray-800 ml-auto"
-                }`}
-              >
-                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {msg.sender === "admin" ? "Admin" : ticket.userEmail} — {date}
-                </p>
-              </div>
-            );
-          })}
+    const date = msg.timestamp
+      ? new Date(msg.timestamp).toLocaleString()
+      : "—";
+
+    return (
+      <div key={i} className="w-full flex">
+        <div
+          className={`p-3 rounded-lg max-w-[80%] ${
+            isSender
+              ? "bg-blue-100 text-blue-900 ml-auto" // ADMIN → RIGHT
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+          <p className="text-xs text-gray-500 mt-1 text-right">
+            {isSender ? "You" : ticket.userEmail} — {date}
+          </p>
         </div>
+      </div>
+    );
+  })}
+</div>
+
+
+
 
         {/* Reply Box */}
         <form onSubmit={sendMessage} className="mt-6">

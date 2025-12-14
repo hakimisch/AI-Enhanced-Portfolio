@@ -31,6 +31,7 @@ export default function DashboardLayout({ children }) {
 
   // 🧭 Sidebar links per role
   const artistLinks = [
+    { href: "/artist", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
     { href: "/artist/artworks", label: "Artworks", icon: <Palette size={20} /> },
     { href: "/artist/merchandise/products", label: "Merchandise", icon: <ShoppingBag size={20} /> },
     { href: "/artist/blog", label: "Blog / Events", icon: <BookOpen size={20} /> },

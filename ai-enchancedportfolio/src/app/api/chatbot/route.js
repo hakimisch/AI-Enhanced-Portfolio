@@ -1,3 +1,5 @@
+//api/api/chatbot/route.js
+
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import ChatSession from "@/app/models/ChatSession";
@@ -48,7 +50,7 @@ export async function POST(req) {
     // ---------------------------------------------------
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
     });
 
     // ---------------------------------------------------
@@ -84,7 +86,24 @@ If the user is expressing frustration, confusion, or cannot proceed,
 respond normally but set intent = "admin".
 
 { "reply": "...", "intent": "general" | "artist" | "admin" }
+
+You MAY optionally include an "action" field.
+
+Action rules:
+- Do NOT include raw URLs in text.
+- Use actions ONLY when helpful.
+- Action must be one of:
+
+{ "type": "link", "label": "...", "target": "artist" | "support" | "become-artist" | "shop" }
+
+Full response format:
+{
+  "reply": "...",
+  "intent": "general" | "artist" | "admin",
+  "action": { ... } | null
+}
 `;
+
 
     const systemMessage = {
       role: "user",
@@ -138,14 +157,27 @@ ${faqText}
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
 
     if (jsonMatch) {
-      try {
-        parsed = JSON.parse(jsonMatch[0]);
-      } catch (e) {
-        parsed = { reply: raw, intent: "general" };
-      }
-    } else {
-      parsed = { reply: raw, intent: "general" };
-    }
+  try {
+    const temp = JSON.parse(jsonMatch[0]);
+    parsed = {
+      reply: temp.reply || raw,
+      intent: temp.intent || "general",
+      action: temp.action || null,
+    };
+  } catch (e) {
+    parsed = {
+      reply: raw,
+      intent: "general",
+      action: null,
+    };
+  }
+} else {
+  parsed = {
+    reply: raw,
+    intent: "general",
+    action: null,
+  };
+}
 
     // ---------------------------------------------------
     // SAVE MESSAGES TO DATABASE
@@ -155,6 +187,7 @@ ${faqText}
       role: "assistant",
       content: parsed.reply,
       intent: parsed.intent,
+      action: parsed.action || null,
     });
     await session.save();
 
@@ -171,6 +204,7 @@ ${faqText}
     return NextResponse.json({
       response: parsed.reply,
       intent: parsed.intent,
+      action: parsed.action || null,
       ended: false,
       sessionKey: key,
     });

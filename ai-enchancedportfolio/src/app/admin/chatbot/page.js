@@ -44,6 +44,8 @@ export default function ChatbotAdminPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const [maxResponses, setMaxResponses] = useState(12);
+
   // Test Modal State
   const [testOpen, setTestOpen] = useState(false);
   const [testInput, setTestInput] = useState("");
@@ -347,6 +349,7 @@ export default function ChatbotAdminPage() {
           </div>
 
           {/* Bar Chart */}
+          
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="text-xl font-semibold mb-4">Most Asked Questions</h3>
 
@@ -368,6 +371,7 @@ export default function ChatbotAdminPage() {
             />
           </div>
         </div>
+        
 
         {/* ========= TEST PROMPT MODAL ========= */}
         {testOpen && (

@@ -1,25 +1,27 @@
 //app/api/artist-support
 
 import mongoose from "mongoose";
+import { NextResponse } from "next/server";
 import ArtistMessage from "@/app/models/ArtistMessage";
 
-export async function GET(req) {
+export async function GET() {
   await mongoose.connect(process.env.MONGODB_URI);
 
-  const tickets = await ArtistMessage.find().sort({ createdAt: -1 });
+  const tickets = await ArtistMessage.find({})
+    .sort({ updatedAt: -1 })
+    .lean();
 
-  return Response.json({ tickets });
+  return NextResponse.json({ tickets });
 }
 
 export async function POST(req) {
   await mongoose.connect(process.env.MONGODB_URI);
+
   const body = await req.json();
 
   const ticket = await ArtistMessage.create({
-    artistEmail: body.artistEmail,
-    userEmail: body.userEmail,
-    subject: body.subject,
-    category: body.category,
+    ...body,
+    status: "open",
     messages: [
       {
         sender: "user",
@@ -30,5 +32,5 @@ export async function POST(req) {
     ],
   });
 
-  return Response.json({ success: true, ticket });
+  return NextResponse.json({ ticket });
 }

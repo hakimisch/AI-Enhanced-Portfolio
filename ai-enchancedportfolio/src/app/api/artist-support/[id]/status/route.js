@@ -1,3 +1,5 @@
+//src/app/api/artist-support/[id]/status/
+
 import mongoose from "mongoose";
 import ArtistMessage from "@/app/models/ArtistMessage";
 
@@ -14,3 +16,4 @@ export async function POST(req, { params }) {
 
   return Response.json({ ticket });
 }
+

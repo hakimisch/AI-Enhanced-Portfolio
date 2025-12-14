@@ -1,73 +1,211 @@
+//src/app/artist/page.js
+
 "use client";
 
 import { useSession } from "next-auth/react";
+import { useEffect, useReducer, useState } from "react";
+import { Bar } from "react-chartjs-2";
 import Link from "next/link";
-import { Palette, ShoppingBag, BookOpen, User } from "lucide-react";
 import DashboardLayout from "components/DashboardLayout";
 
-export default function ArtistDashboard() {
-  const { data: session, status } = useSession();
-  if (status === "loading") return <p className="p-8 text-center">Loading...</p>;
-  if (!session) return <p className="text-center text-red-500 p-8">Please log in as an artist.</p>;
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-  const username = session.user.username || session.user.name || "Artist";
+import {
+  DollarSign,
+  ShoppingCart,
+  Image as ArtIcon,
+  Package,
+  MessageCircle,
+  AlertTriangle,
+  ClipboardList,
+} from "lucide-react";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+
+export default function ArtistDashboard() {
+  const { data: session } = useSession();
+
+  const [{ loading, summary }, dispatch] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "FETCH_REQUEST":
+          return { ...state, loading: true };
+        case "FETCH_SUCCESS":
+          return { loading: false, summary: action.payload };
+        default:
+          return state;
+      }
+    },
+    { loading: true, summary: {} }
+  );
+
+  const [range, setRange] = useState("30d");
+
+  useEffect(() => {
+    if (!session?.user?.email) return;
+
+    async function loadSummary() {
+      dispatch({ type: "FETCH_REQUEST" });
+      const res = await fetch(`/api/artist/summary?range=${range}`);
+      const data = await res.json();
+      dispatch({ type: "FETCH_SUCCESS", payload: data });
+    }
+
+    loadSummary();
+  }, [session, range]);
+
+  if (loading)
+    return (
+      <DashboardLayout>
+        <p className="p-8">Loading dashboard…</p>
+      </DashboardLayout>
+    );
+
+  const chartData = {
+    labels: summary.salesData?.map((d) => d._id) || [],
+    datasets: [
+      {
+        label: "Sales (RM)",
+        data: summary.salesData?.map((d) => d.totalSales) || [],
+        backgroundColor: "rgba(99,102,241,0.6)",
+      },
+    ],
+  };
 
   const cards = [
     {
-      title: "My Artworks",
-      desc: "Upload, edit, or remove your portfolio pieces.",
-      icon: <Palette className="text-blue-500" size={28} />,
-      href: "/artist/artworks",
+      title: "Total Sales",
+      value: `RM${summary.totalSales || 0}`,
+      icon: <DollarSign className="text-green-500" />,
+      href: "/artist/merchandise/orders",
     },
     {
-      title: "My Merchandise",
-      desc: "Manage your products for sale in the shop.",
-      icon: <ShoppingBag className="text-green-500" size={28} />,
+      title: "Orders",
+      value: summary.ordersCount || 0,
+      icon: <ShoppingCart className="text-blue-500" />,
+      href: "/artist/merchandise/orders",
+    },
+    {
+      title: "Unfulfilled Orders",
+      value: summary.unfulfilledOrdersCount || 0,
+      icon: <AlertTriangle className="text-red-500" />,
+      href: "/artist/merchandise/orders",
+      danger: true,
+    },
+    {
+      title: "Products",
+      value: summary.productsCount || 0,
+      icon: <Package className="text-purple-500" />,
       href: "/artist/merchandise/products",
     },
     {
-      title: "My Blog / Events",
-      desc: "Share your updates, stories, and announcements.",
-      icon: <BookOpen className="text-purple-500" size={28} />,
-      href: "/artist/blog",
+      title: "Artworks",
+      value: summary.artworksCount || 0,
+      icon: <ArtIcon className="text-pink-500" />,
+      href: "/artist/artworks",
     },
     {
-      title: "My Profile",
-      desc: "Edit your About Me and profile details.",
-      icon: <User className="text-orange-500" size={28} />,
-      href: "/artist/profile",
+      title: "Messages",
+      value: summary.messagesOpen || 0,
+      icon: <MessageCircle className="text-orange-500" />,
+      href: "/artist/contact",
+    },
+    {
+      title: "Commissions Inquiries",
+      value: summary.commissionCount || 0,
+      icon: <ClipboardList className="text-indigo-500" />,
+      href: "/artist/contact",
     },
   ];
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            Welcome back, <span className="text-blue-600">{username}</span> 🎨
-          </h1>
-          <p className="text-gray-600">
-            Manage your portfolio, shop, and blog all in one place.
-          </p>
-        </div>
+      <div className="p-6 bg-gray-50 min-h-screen">
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-          {cards.map((card) => (
+        <h1 className="text-3xl font-semibold mb-6">Artist Dashboard</h1>
+
+        {/* CARDS */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+          {cards.map((c) => (
             <Link
-              key={card.href}
-              href={card.href}
-              className="group bg-white p-6 rounded-xl shadow hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-start"
+              key={c.title}
+              href={c.href}
+              className={`bg-white p-5 rounded-xl shadow-sm hover:shadow-md transition flex gap-4 items-center ${
+                c.danger ? "border border-red-200" : ""
+              }`}
             >
-              <div className="mb-4 bg-gray-100 p-4 rounded-full group-hover:bg-gray-200 transition">
-                {card.icon}
+              <div className="p-3 bg-gray-50 rounded-full">{c.icon}</div>
+              <div>
+                <p className="text-sm text-gray-500">{c.title}</p>
+                <p className="text-2xl font-semibold">{c.value}</p>
               </div>
-              <h2 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition">
-                {card.title}
-              </h2>
-              <p className="text-gray-500 text-sm mt-2">{card.desc}</p>
             </Link>
           ))}
         </div>
+
+        {/* SALES CHART */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-10">
+          <div className="flex justify-between mb-4">
+            <h2 className="text-xl font-semibold">Sales Overview</h2>
+            <select
+              value={range}
+              onChange={(e) => setRange(e.target.value)}
+              className="border rounded-lg px-3 py-1 text-sm"
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="all">All time</option>
+            </select>
+          </div>
+
+          <div className="h-[260px]">
+            <Bar data={chartData} options={{ maintainAspectRatio: false }} />
+          </div>
+        </div>
+
+        {/* TOP PRODUCTS */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-10">
+          <h2 className="text-xl font-semibold mb-4">Best Selling Products</h2>
+
+          {summary.topProducts?.length > 0 ? (
+            <ul className="space-y-3 text-sm">
+              {summary.topProducts.map((p) => (
+                <li key={p._id} className="flex justify-between">
+                  <span>{p._id}</span>
+                  <span className="font-medium">RM{p.totalSales}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-400 italic">No product sales yet</p>
+          )}
+        </div>
+
+        {/* MONTHLY EARNINGS */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-10">
+          <h2 className="text-xl font-semibold mb-4">Monthly Earnings</h2>
+
+          {summary.monthlyEarnings?.length > 0 ? (
+            <ul className="space-y-2 text-sm">
+              {summary.monthlyEarnings.map((m) => (
+                <li key={m._id} className="flex justify-between">
+                  <span>{m._id}</span>
+                  <span className="font-medium">RM{m.totalSales}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-400 italic">No earnings data</p>
+          )}
+        </div>
+
       </div>
     </DashboardLayout>
   );

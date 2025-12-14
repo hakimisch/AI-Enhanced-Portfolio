@@ -15,6 +15,10 @@ const ChatbotConfigSchema = new mongoose.Schema(
     ],
     temperature: { type: Number, default: 0.6 },
     enabled: { type: Boolean, default: true },
+    maxResponsesPerSession: {
+      type: Number,
+      default: 12, // sensible default
+},
   },
   { timestamps: true }
 );

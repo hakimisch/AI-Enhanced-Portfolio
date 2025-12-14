@@ -5,11 +5,14 @@
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import Navbar from "components/Navbar";
+import Link from "next/link";
 
 export default function SupportPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
   const [tickets, setTickets] = useState([]);
   const [creating, setCreating] = useState(false);
+  const [loadingTickets, setLoadingTickets] = useState(true);
 
   const [newTicket, setNewTicket] = useState({
     subject: "",
@@ -18,54 +21,76 @@ export default function SupportPage() {
     userEmail: "",
   });
 
+  const STATUS_STYLES = {
+  open: "bg-green-100 text-green-700",
+  waiting: "bg-yellow-100 text-yellow-700",
+  closed: "bg-gray-200 text-gray-600",
+};
+
   useEffect(() => {
-    if (session?.user?.email) {
-      setNewTicket((t) => ({ ...t, userEmail: session.user.email }));
+    if (status === "authenticated" && session?.user?.email) {
+      setNewTicket((t) => ({
+        ...t,
+        userEmail: session.user.email,
+      }));
+
+      loadTickets(session.user.email);
     }
-  }, [session]);
+  }, [status]);
 
-  useEffect(() => {
-    loadTickets();
-  }, []);
+  async function loadTickets(email) {
+    if (!email) return;
 
-  async function loadTickets() {
-    const res = await fetch("/api/support");
-    const data = await res.json();
+    setLoadingTickets(true);
 
-    if (session?.user?.email) {
-      setTickets(data.tickets.filter((t) => t.userEmail === session.user.email));
-    } else setTickets([]);
+    try {
+      const res = await fetch("/api/support", { cache: "no-store" });
+      const data = await res.json();
+
+      setTickets(data.tickets.filter((t) => t.userEmail === email));
+    } catch (err) {
+      console.error("Failed to load tickets", err);
+      setTickets([]);
+    } finally {
+      setLoadingTickets(false);
+    }
   }
 
   async function submitTicket(e) {
     e.preventDefault();
+    if (!session?.user?.email) return;
+
     setCreating(true);
 
-    await fetch("/api/support", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newTicket),
-    });
+    try {
+      await fetch("/api/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newTicket),
+      });
 
-    setCreating(false);
-    setNewTicket({
-      subject: "",
-      category: "general",
-      message: "",
-      userEmail: session?.user?.email || "",
-    });
+      setNewTicket({
+        subject: "",
+        category: "general",
+        message: "",
+        userEmail: session.user.email,
+      });
 
-    loadTickets();
+      await loadTickets(session.user.email);
+    } catch (err) {
+      console.error("Failed to submit ticket", err);
+    } finally {
+      setCreating(false);
+    }
   }
 
   return (
     <>
       <Navbar />
-      
-     <div className="relative overflow-hidden bg-gradient-to-b from-purple-50 to-white"/>
+
+      <div className="relative overflow-hidden bg-gradient-to-b from-purple-50 to-white" />
 
       <div className="max-w-3xl mx-auto px-6 py-10">
-        
 
         {/* HEADER */}
         <div className="relative mb-10">
@@ -122,16 +147,9 @@ export default function SupportPage() {
             <button
               disabled={creating}
               className="
-                w-full 
-                py-3 
-                rounded-xl 
-                text-white 
-                bg-gradient-to-r 
-                from-blue-600 
-                to-indigo-600 
-                hover:-translate-y-0.5 
-                hover:shadow-lg 
-                transition-all
+                w-full py-3 rounded-xl text-white
+                bg-gradient-to-r from-blue-600 to-indigo-600
+                hover:-translate-y-0.5 hover:shadow-lg transition-all
               "
             >
               {creating ? "Submitting..." : "Submit Ticket"}
@@ -143,24 +161,35 @@ export default function SupportPage() {
         <h2 className="text-2xl font-bold mb-4">My Tickets</h2>
 
         <div className="space-y-4">
-          {tickets.length === 0 && (
+          {loadingTickets && (
+            <p className="text-gray-500 italic">Loading tickets…</p>
+          )}
+
+          {!loadingTickets && tickets.length === 0 && (
             <p className="text-gray-500 italic">No tickets yet.</p>
           )}
 
           {tickets.map((t) => (
-            <a
+            <Link
               key={t._id}
-              href={`/support/${t._id}`}
+              href={`/contact/support/${t._id}`}
               className="block bg-white rounded-xl shadow p-5 hover:shadow-md hover:-translate-y-0.5 transition"
             >
               <div className="flex justify-between">
                 <h3 className="font-semibold">{t.subject}</h3>
-                <span className="text-sm text-gray-500">{t.status}</span>
+                <span
+                className={`text-sm px-2 py-1 rounded-lg capitalize ${
+                  STATUS_STYLES[t.status] || "bg-gray-200 text-gray-600"
+                }`}
+              >
+                {t.status}
+              </span>
               </div>
+
               <p className="text-gray-600 text-sm mt-1">
                 Updated: {new Date(t.updatedAt).toLocaleString()}
               </p>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

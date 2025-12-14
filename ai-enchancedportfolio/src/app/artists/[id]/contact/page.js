@@ -1,9 +1,12 @@
+//src/app/artists/[id]/contact/
+
 "use client";
 
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Navbar from "components/Navbar";
+import Link from "next/link";
 
 export default function ContactArtistPage() {
   const params = useParams();
@@ -197,22 +200,38 @@ export default function ContactArtistPage() {
           )}
 
           {tickets.map((ticket) => (
-            <div
+            <Link
               key={ticket._id}
-              className="bg-white p-4 rounded-xl shadow hover:shadow-md transition"
+              href={`/artists/${encodeURIComponent(artistEmail)}/contact/${ticket._id}`}
+              className="block bg-white p-4 rounded-xl shadow hover:shadow-md hover:-translate-y-0.5 transition"
             >
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center mb-1">
                 <h3 className="font-semibold">{ticket.subject}</h3>
-                <span className="text-sm text-gray-500">
-                  {ticket.status || "open"}
+
+                <span
+                  className={`text-xs px-3 py-1 rounded-full font-medium ${
+                    ticket.status === "open"
+                      ? "bg-green-100 text-green-700"
+                      : ticket.status === "waiting"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  {ticket.status}
                 </span>
               </div>
-              <p className="text-gray-600 text-sm mt-1">
+
+              <p className="text-gray-600 text-sm capitalize">
+                Category: {ticket.category}
+              </p>
+
+              <p className="text-gray-400 text-xs mt-1">
                 Updated: {new Date(ticket.updatedAt).toLocaleString()}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
+
       </div>
     </>
   );

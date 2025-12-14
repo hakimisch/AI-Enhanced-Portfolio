@@ -1,32 +1,35 @@
 import mongoose from "mongoose";
+import { NextResponse } from "next/server";
 import ArtistMessage from "@/app/models/ArtistMessage";
 
-export async function GET(req, { params }) {
+export async function GET(req, context) {
   await mongoose.connect(process.env.MONGODB_URI);
+  const { id } = await context.params;
 
-  const ticket = await ArtistMessage.findById(params.id);
-
-  return Response.json({ ticket });
+  const ticket = await ArtistMessage.findById(id).lean();
+  return NextResponse.json({ ticket });
 }
 
-export async function POST(req, { params }) {
+export async function POST(req, context) {
   await mongoose.connect(process.env.MONGODB_URI);
+  const { id } = await context.params;
 
   const { text } = await req.json();
 
-  const ticket = await ArtistMessage.findById(params.id);
-  if (!ticket) return Response.json({ error: "Not found" });
+  const ticket = await ArtistMessage.findById(id);
+  if (!ticket) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   ticket.messages.push({
     sender: "artist",
     text,
     timestamp: new Date(),
-    read: false,
+    read: true,
   });
 
   ticket.status = "waiting";
-
   await ticket.save();
 
-  return Response.json({ ticket });
+  return NextResponse.json({ ticket });
 }

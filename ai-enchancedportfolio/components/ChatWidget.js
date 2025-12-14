@@ -13,7 +13,6 @@ function cleanBotMessage(text) {
 
   text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
 
-  // If JSON, extract `reply`
   if (text.startsWith("{") && text.endsWith("}")) {
     try {
       const obj = JSON.parse(text);
@@ -24,42 +23,84 @@ function cleanBotMessage(text) {
   return text;
 }
 
+// Intent-aware follow-up suggestions
+const FOLLOW_UP_SUGGESTIONS = {
+  general: [
+    "Show me artworks",
+    "Browse artists",
+    "View the shop",
+    "Read latest blogs",
+  ],
+  artist: [
+    "How do commissions work?",
+    "Contact an artist",
+    "Browse artist portfolios",
+  ],
+  admin: [
+    "Where is my order?",
+    "Payment issues",
+    "Shipping information",
+    "Contact support",
+  ],
+  default: [
+    "What can you help me with?",
+    "How does ArtSpace work?",
+    "Show me popular artworks",
+  ],
+};
+
 export default function ChatWidget() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [enabled, setEnabled] = useState(true);   // ← ADDED
+  const [enabled, setEnabled] = useState(true);
+  const [lastIntent, setLastIntent] = useState("general");
 
   const chatRef = useRef(null);
-  const router = useRouter();
 
-  // ✅ Fetch chatbot enabled/disabled state
+  // Safe route map (AI NEVER controls URLs)
+  const ACTION_ROUTES = {
+    shop: "/e-commerce",
+    artworks: "/artworks",
+    blogs: "/blog",
+    artists: "/artists",
+    support: "/contact/support",
+    "become-artist": "/artists",
+  };
+
+  // Fetch chatbot enabled state
   useEffect(() => {
     fetch("/api/chatbot/config")
-      .then(res => res.json())
-      .then(cfg => setEnabled(cfg.enabled))
-      .catch(() => setEnabled(true)); // fallback
+      .then((res) => res.json())
+      .then((cfg) => setEnabled(cfg.enabled))
+      .catch(() => setEnabled(true));
   }, []);
 
-  // Auto-scroll on new messages
+  // Welcome message when chat opens
+  useEffect(() => {
+    if (open && messages.length === 0) {
+      setMessages([
+        {
+          role: "assistant",
+          content: "Hi! I’m the ArtSpace Assistant 🤍 How can I help you today?",
+          intent: "general",
+        },
+      ]);
+      setLastIntent("general");
+    }
+  }, [open]);
+
+  // Auto-scroll
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
   }, [messages, loading]);
-
-  const suggestions = [
-    "How do commissions work?",
-    "How do I check my order?",
-    "What payment methods are available?",
-    "How long is shipping?",
-    "How do I become an artist?",
-    "Show me available artworks",
-  ];
 
   const sendMessage = async (textOverride) => {
     if (loading || ended) return;
@@ -67,10 +108,7 @@ export default function ChatWidget() {
     const userInput = textOverride || input;
     if (!userInput.trim()) return;
 
-    const userMsg = { role: "user", content: userInput };
-    const updatedHistory = [...messages, userMsg];
-
-    setMessages(updatedHistory);
+    setMessages((prev) => [...prev, { role: "user", content: userInput }]);
     setInput("");
     setLoading(true);
 
@@ -80,7 +118,6 @@ export default function ChatWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userInput,
-          history: updatedHistory,
           sessionKey: session?.user?.email || undefined,
         }),
       });
@@ -90,23 +127,23 @@ export default function ChatWidget() {
 
       if (data.ended) setEnded(true);
 
-      const cleaned = cleanBotMessage(data.response);
-
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: cleaned,
+          content: cleanBotMessage(data.response),
           intent: data.intent,
+          action: data.action || null,
         },
       ]);
+
+      setLastIntent(data.intent || "default");
     } catch (err) {
-      setLoading(false);
       console.error("Chatbot error:", err);
+      setLoading(false);
     }
   };
 
-  // ⚠️ If chatbot is disabled, render nothing
   if (!enabled) return null;
 
   return (
@@ -133,26 +170,7 @@ export default function ChatWidget() {
           </div>
 
           {/* Messages */}
-          <div
-            ref={chatRef}
-            className="flex-1 overflow-y-auto p-4 space-y-3"
-          >
-            {/* Suggestions if chat empty */}
-            {messages.length === 0 && (
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {suggestions.map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => sendMessage(q)}
-                    className="text-xs px-2 py-1 border border-gray-300 rounded-lg hover:bg-gray-100"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Message bubbles */}
+          <div ref={chatRef} className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.map((m, i) => (
               <div key={i} className="flex flex-col">
                 <div
@@ -165,50 +183,74 @@ export default function ChatWidget() {
                   {m.content}
                 </div>
 
-                {/* Intent Routing Buttons */}
-                {m.role === "assistant" && m.intent === "artist" && (
-                  <>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Need a custom artwork or commission?
-                    </div>
+                {/* Action button */}
+                {m.role === "assistant" &&
+                  m.action?.type === "link" &&
+                  ACTION_ROUTES[m.action.target] && (
                     <button
-                      onClick={() => router.push("/contact/artist")}
-                      className="mt-1 text-xs bg-pink-500 text-white py-1 px-2 rounded self-start hover:bg-pink-600"
+                      onClick={() =>
+                        router.push(ACTION_ROUTES[m.action.target])
+                      }
+                      className="mt-2 text-xs bg-indigo-600 text-white py-1.5 px-3 rounded self-start hover:bg-indigo-700"
                     >
-                      Contact Artist →
+                      {m.action.label} →
                     </button>
-                  </>
-                )}
+                  )}
 
-                {m.role === "assistant" && m.intent === "admin" && (
-                  <>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Need help with orders or payments?
-                    </div>
+                {/* Fallback intent buttons */}
+                {m.role === "assistant" &&
+                  m.intent === "artist" &&
+                  !m.action && (
+                    <button
+                      onClick={() => router.push("/artists")}
+                      className="mt-2 text-xs bg-pink-500 text-white py-1.5 px-3 rounded self-start hover:bg-pink-600"
+                    >
+                      Browse Artists →
+                    </button>
+                  )}
+
+                {m.role === "assistant" &&
+                  m.intent === "admin" &&
+                  !m.action && (
                     <button
                       onClick={() => router.push("/contact/support")}
-                      className="mt-1 text-xs bg-blue-500 text-white py-1 px-2 rounded self-start hover:bg-blue-600"
+                      className="mt-2 text-xs bg-blue-500 text-white py-1.5 px-3 rounded self-start hover:bg-blue-600"
                     >
                       Contact Support →
                     </button>
-                  </>
-                )}
+                  )}
               </div>
             ))}
 
-            {/* Typing indicator */}
+            {/* Typing Indicator */}
             {loading && (
-              <div className="flex items-center gap-1 text-gray-400 text-xs">
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></span>
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300"></span>
+              <div className="flex gap-1 text-gray-400 text-xs">
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150" />
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300" />
               </div>
             )}
 
-            {/* Ended message */}
+            {/* Smart Suggestions */}
+            {!loading && !ended && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {(FOLLOW_UP_SUGGESTIONS[lastIntent] ||
+                  FOLLOW_UP_SUGGESTIONS.default
+                ).map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => sendMessage(q)}
+                    className="text-xs px-3 py-1.5 border border-gray-300 rounded-full hover:bg-gray-100 transition"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {ended && (
-              <div className="text-gray-500 text-xs italic mt-2">
-                Chat ended — please contact support or an artist for more help.
+              <div className="text-gray-500 text-xs italic">
+                Chat ended — please contact support or an artist.
               </div>
             )}
           </div>
@@ -221,12 +263,12 @@ export default function ChatWidget() {
               disabled={loading || ended}
               onChange={(e) => setInput(e.target.value)}
               placeholder={ended ? "Chat ended" : "Type your message…"}
-              className="flex-1 border px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+              className="flex-1 border px-3 py-2 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
             />
             <button
               onClick={() => sendMessage()}
               disabled={loading || ended}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
             >
               Send
             </button>

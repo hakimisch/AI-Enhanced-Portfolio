@@ -1,3 +1,5 @@
+// api/support/[id]/read/
+
 import { NextResponse } from "next/server";
 import dbConnect from "@/app/libs/mongoose";
 import SupportTicket from "@/app/models/SupportTicket";
