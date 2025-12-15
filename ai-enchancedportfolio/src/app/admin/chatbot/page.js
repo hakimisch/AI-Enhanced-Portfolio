@@ -65,6 +65,8 @@ export default function ChatbotAdminPage() {
     const analyticsRes = await fetch("/api/chatbot/analytics");
     const analyticsData = await analyticsRes.json();
 
+    setMaxResponses(configData.maxResponsesPerSession ?? 12);
+
     setSystemPrompt(configData.systemPrompt || "");
     setFaqs(configData.faqs || []);
     setTemperature(configData.temperature ?? 0.6);
@@ -85,6 +87,7 @@ export default function ChatbotAdminPage() {
         faqs,
         temperature,
         enabled,
+        maxResponsesPerSession: maxResponses,
       }),
     });
 
@@ -295,6 +298,27 @@ export default function ChatbotAdminPage() {
                 )}
               </Droppable>
             </DragDropContext>
+          </div>
+
+          {/* MAX RESPONSES PER USER */}
+          <div className="mb-10">
+            <label className="font-medium text-lg">
+              Max Responses Per User Session
+            </label>
+
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={maxResponses}
+              onChange={(e) => setMaxResponses(Number(e.target.value))}
+              className="w-full mt-2 border rounded-lg p-2"
+            />
+
+            <p className="text-gray-500 text-sm mt-1">
+              Limits how many times the chatbot can reply per user session.
+              Helps prevent abuse and control API costs.
+            </p>
           </div>
 
           {/* Save Button */}

@@ -3,18 +3,20 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import ChatSession from "@/app/models/ChatSession";
-import dbConnect from "@/app/libs/mongoose";
 import ChatbotConfig from "@/app/models/ChatbotConfig";
+import dbConnect from "@/app/libs/mongoose";
 
 export async function POST(req) {
   try {
     await dbConnect();
 
     // ---------------------------------------------------
-    // 🔒 CHATBOT ENABLED CHECK (NEW)
+    // LOAD CHATBOT CONFIG (SINGLE SOURCE OF TRUTH)
     // ---------------------------------------------------
-    const cfg = await ChatbotConfig.findOne();
-    if (cfg && cfg.enabled === false) {
+    const config = await ChatbotConfig.findOne();
+
+    // 🔒 CHATBOT ENABLED CHECK
+    if (config && config.enabled === false) {
       return NextResponse.json({
         response: "The chatbot is currently disabled by admin.",
         intent: "general",
@@ -23,16 +25,25 @@ export async function POST(req) {
     }
 
     // ---------------------------------------------------
-    // SESSION IDENTIFIER
+    // ADMIN-CONTROLLED MAX RESPONSES
+    // ---------------------------------------------------
+    const maxResponses =
+      typeof config?.maxResponsesPerSession === "number"
+        ? config.maxResponsesPerSession
+        : 12;
+
+    // ---------------------------------------------------
+    // REQUEST BODY + SESSION KEY
     // ---------------------------------------------------
     const { message, sessionKey } = await req.json();
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0];
+
     const key =
       sessionKey ||
       (ip ? `anon_${ip.replace(/\./g, "_")}` : `anon_${Math.random()}`);
 
     // ---------------------------------------------------
-    // LOAD SESSION
+    // LOAD OR CREATE CHAT SESSION
     // ---------------------------------------------------
     let session = await ChatSession.findOne({ sessionKey: key });
 
@@ -43,7 +54,21 @@ export async function POST(req) {
       });
     }
 
-    const recentMessages = session.messages.slice(-12);
+    // ---------------------------------------------------
+    // SESSION RESPONSE LIMIT ENFORCEMENT
+    // ---------------------------------------------------
+    const assistantReplies = session.messages.filter(
+      (m) => m.role === "assistant"
+    );
+
+    if (assistantReplies.length >= maxResponses) {
+      return NextResponse.json({
+        response:
+          "This session has reached the maximum number of responses. Please contact support or an artist.",
+        intent: "general",
+        ended: true,
+      });
+    }
 
     // ---------------------------------------------------
     // SET UP GEMINI
@@ -54,11 +79,9 @@ export async function POST(req) {
     });
 
     // ---------------------------------------------------
-    // LOAD CONFIG + BUILD SYSTEM MESSAGE
+    // SYSTEM PROMPT + FAQ CONTEXT
     // ---------------------------------------------------
-    const config = await ChatbotConfig.findOne();
-
-    const configSystemPrompt =
+    const systemPrompt =
       config?.systemPrompt ||
       "You are ArtSpace Support Bot. Answer clearly and concisely.";
 
@@ -73,48 +96,30 @@ Rules:
 2. If commissions → intent = "artist".
 3. If shipping/payment/orders → intent = "admin".
 4. Max 120 words.
-5. Return ONLY valid JSON:
+5. Return ONLY valid JSON.
 
-If the user mentions:
-- "commission", "custom art", "hire artist", "artist", "become an artist", "contact artist", "artist profile"
-  → intent = "artist"
+Intent keywords:
+- commission, custom art, hire artist → "artist"
+- order, shipping, payment, refund → "admin"
 
-- "order", "shipping", "payment", "refund", "tracking", "order status", "customer support"
-  → intent = "admin"
-
-If the user is expressing frustration, confusion, or cannot proceed,
-respond normally but set intent = "admin".
-
-{ "reply": "...", "intent": "general" | "artist" | "admin" }
-
-You MAY optionally include an "action" field.
-
-Action rules:
-- Do NOT include raw URLs in text.
-- Use actions ONLY when helpful.
-- Action must be one of:
-
-{ "type": "link", "label": "...", "target": "artist" | "support" | "become-artist" | "shop" }
-
-Full response format:
+Response format:
 {
   "reply": "...",
   "intent": "general" | "artist" | "admin",
-  "action": { ... } | null
+  "action": { "type": "link", "label": "...", "target": "artist" | "support" | "shop" } | null
 }
 `;
-
 
     const systemMessage = {
       role: "user",
       parts: [
         {
           text: `
-${configSystemPrompt}
+${systemPrompt}
 
 ${intentRules}
 
-Here are FAQs:
+FAQs:
 ${faqText}
 `,
         },
@@ -122,27 +127,18 @@ ${faqText}
     };
 
     // ---------------------------------------------------
-    // FORMAT HISTORY FOR GEMINI
+    // FORMAT CHAT HISTORY (LIMITED)
     // ---------------------------------------------------
-    const formattedHistory = recentMessages.map((msg) => ({
-      role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: msg.content }],
-    }));
+    const formattedHistory = session.messages
+      .slice(-maxResponses * 2)
+      .map((msg) => ({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: msg.content }],
+      }));
 
     const chat = model.startChat({
       history: [systemMessage, ...formattedHistory],
     });
-
-    // ---------------------------------------------------
-    // CUTOFF FOR LONG SESSIONS
-    // ---------------------------------------------------
-    if (recentMessages.length >= 12) {
-      return NextResponse.json({
-        response: "This session has ended. Please contact support or an artist.",
-        intent: "general",
-        ended: true,
-      });
-    }
 
     // ---------------------------------------------------
     // SEND MESSAGE TO LLM
@@ -150,61 +146,54 @@ ${faqText}
     const result = await chat.sendMessage(message);
     const raw = result.response.text().trim();
 
-    // --- Extract JSON inside ANY messy output ---
-    let parsed = null;
-
-    // Find JSON object inside the string
+    // ---------------------------------------------------
+    // PARSE JSON RESPONSE SAFELY
+    // ---------------------------------------------------
+    let parsed;
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
 
     if (jsonMatch) {
-  try {
-    const temp = JSON.parse(jsonMatch[0]);
-    parsed = {
-      reply: temp.reply || raw,
-      intent: temp.intent || "general",
-      action: temp.action || null,
-    };
-  } catch (e) {
-    parsed = {
-      reply: raw,
-      intent: "general",
-      action: null,
-    };
-  }
-} else {
-  parsed = {
-    reply: raw,
-    intent: "general",
-    action: null,
-  };
-}
+      try {
+        const temp = JSON.parse(jsonMatch[0]);
+        parsed = {
+          reply: temp.reply || raw,
+          intent: temp.intent || "general",
+          action: temp.action || null,
+        };
+      } catch {
+        parsed = { reply: raw, intent: "general", action: null };
+      }
+    } else {
+      parsed = { reply: raw, intent: "general", action: null };
+    }
 
     // ---------------------------------------------------
-    // SAVE MESSAGES TO DATABASE
+    // SAVE MESSAGE PAIR
     // ---------------------------------------------------
     session.messages.push({ role: "user", content: message });
     session.messages.push({
       role: "assistant",
       content: parsed.reply,
       intent: parsed.intent,
-      action: parsed.action || null,
+      action: parsed.action,
     });
+
     await session.save();
 
     // ---------------------------------------------------
-    // AUTO-CLEAN OLD SESSIONS
+    // AUTO CLEAN OLD SESSIONS (48H)
     // ---------------------------------------------------
     ChatSession.deleteMany({
       updatedAt: { $lt: new Date(Date.now() - 48 * 60 * 60 * 1000) },
     }).catch(() => {});
 
     // ---------------------------------------------------
-    // RETURN TO FRONTEND
+    // RETURN TO CLIENT
     // ---------------------------------------------------
     return NextResponse.json({
       response: parsed.reply,
       intent: parsed.intent,
-      action: parsed.action || null,
+      action: parsed.action,
       ended: false,
       sessionKey: key,
     });
