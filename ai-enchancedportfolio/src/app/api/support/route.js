@@ -1,3 +1,5 @@
+//src/app/api/support
+
 import { NextResponse } from "next/server";
 import dbConnect from "@/app/libs/mongoose";
 import SupportTicket from "@/app/models/SupportTicket";
@@ -6,21 +8,10 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function GET() {
   await dbConnect();
-  const session = await getServerSession(authOptions);
 
-  let tickets;
-
-  if (session?.user?.role === "admin") {
-    tickets = await SupportTicket.find({})
-      .sort({ updatedAt: -1 })
-      .lean();
-  } else if (session?.user?.email) {
-    tickets = await SupportTicket.find({ userEmail: session.user.email })
-      .sort({ updatedAt: -1 })
-      .lean();
-  } else {
-    tickets = []; // Guest sees nothing
-  }
+  const tickets = await SupportTicket.find({})
+    .sort({ updatedAt: -1 })
+    .lean();
 
   return NextResponse.json({ tickets });
 }

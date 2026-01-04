@@ -6,10 +6,16 @@ import SupportTicket from "@/app/models/SupportTicket";
 
 export async function POST(req, { params }) {
   await dbConnect();
-  const { id } = params;
+
+  const { id } = await params; // ✅ THIS fixes the warning
 
   const ticket = await SupportTicket.findById(id);
-  if (!ticket) return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
+  if (!ticket) {
+    return NextResponse.json(
+      { error: "Ticket not found" },
+      { status: 404 }
+    );
+  }
 
   ticket.lastReadAdminAt = new Date();
   await ticket.save();
