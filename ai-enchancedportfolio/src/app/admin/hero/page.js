@@ -1,3 +1,5 @@
+//src/app/admin/hero/page.js
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";

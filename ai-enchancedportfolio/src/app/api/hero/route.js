@@ -1,3 +1,5 @@
+//src/app/api/hero/route.js
+
 import { NextResponse } from "next/server";
 import dbConnect from "@/app/libs/mongoose";
 import HeroSettings from "@/app/models/HeroSettings";
@@ -32,7 +34,7 @@ export async function POST(req) {
   settings.title = body.title ?? settings.title;
   settings.subtitle = body.subtitle ?? settings.subtitle;
   settings.overlayOpacity = body.overlayOpacity ?? settings.overlayOpacity;
-  settings.colorTint = body.colorTint ?? settings.colorTint;
+  settings.tintColor = body.tintColor ?? settings.tintColor;
 
   await settings.save();
 

@@ -68,6 +68,15 @@ export default function HomePage() {
           />
         </div>
 
+        {/* TINT OVERLAY */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: hero?.tintColor || "rgb(0,0,0)",
+            opacity: hero?.overlayOpacity ?? 0.4,
+          }}
+        />
+
         {/* Foreground Content */}
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
           <div className="">
