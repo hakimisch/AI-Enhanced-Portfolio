@@ -2,6 +2,7 @@
 
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import Navbar from "components/Navbar";
@@ -9,6 +10,7 @@ import Link from "next/link";
 
 export default function SupportPage() {
   const { data: session, status } = useSession();
+  const router = useRouter();
 
   const [tickets, setTickets] = useState([]);
   const [creating, setCreating] = useState(false);
@@ -28,15 +30,10 @@ export default function SupportPage() {
 };
 
   useEffect(() => {
-    if (status === "authenticated" && session?.user?.email) {
-      setNewTicket((t) => ({
-        ...t,
-        userEmail: session.user.email,
-      }));
-
-      loadTickets(session.user.email);
-    }
-  }, [status]);
+  if (status === "unauthenticated") {
+    router.push("/auth/login?redirect=/contact/support");
+  }
+}, [status, router]);
 
   async function loadTickets(email) {
     if (!email) return;

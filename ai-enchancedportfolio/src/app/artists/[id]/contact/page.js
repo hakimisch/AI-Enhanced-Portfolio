@@ -2,6 +2,7 @@
 
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -10,7 +11,8 @@ import Link from "next/link";
 
 export default function ContactArtistPage() {
   const params = useParams();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   const artistEmail = decodeURIComponent(params.id);
 
@@ -25,6 +27,14 @@ export default function ContactArtistPage() {
     category: "commission",
     message: "",
   });
+
+  useEffect(() => {
+  if (status === "unauthenticated") {
+    router.push(
+      `/auth/login?redirect=/artists/${encodeURIComponent(params.id)}/contact`
+    );
+  }
+}, [status, router, params.id]);
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -85,37 +95,7 @@ export default function ContactArtistPage() {
 
       <div className="max-w-3xl mx-auto px-6 py-10">
         {/* HEADER */}
-        <div className="relative mb-10">
-          <div className="w-full h-40 rounded-2xl bg-gradient-to-br from-purple-200 via-pink-100 to-white shadow-lg" />
-
-          {artist && (
-            <div className="absolute -bottom-10 left-6 flex items-center gap-4">
-              {/* Profile ring */}
-              <div className="relative w-20 h-20 group">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 p-[3px] shadow-lg">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-black/20">
-                    {artist.profileImage ? (
-                      <img
-                        src={artist.profileImage}
-                        className="w-full h-full object-cover"
-                        alt={artist.username}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xl font-bold bg-gray-300 text-gray-700 rounded-full">
-                        {artist.username?.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8">
-                <h1 className="text-3xl font-bold">{artist.username}</h1>
-                <p className="text-gray-600 text-sm">{artistEmail}</p>
-              </div>
-            </div>
-          )}
-        </div>
+        
 
         {/* CONTACT FORM */}
         <div className="bg-white rounded-2xl shadow p-6 mt-16">
