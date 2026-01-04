@@ -3,8 +3,6 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/app/libs/mongoose";
 import SupportTicket from "@/app/models/SupportTicket";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function GET() {
   await dbConnect();

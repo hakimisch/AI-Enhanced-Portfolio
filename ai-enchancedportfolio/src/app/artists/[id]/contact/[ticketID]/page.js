@@ -50,7 +50,6 @@ export default function ArtistTicketPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: newMsg,
-        sender: "user",
       }),
     });
 

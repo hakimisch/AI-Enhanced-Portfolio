@@ -32,8 +32,19 @@ export default function SupportPage() {
   useEffect(() => {
   if (status === "unauthenticated") {
     router.push("/auth/login?redirect=/contact/support");
+    return;
   }
-}, [status, router]);
+
+  if (status === "authenticated" && session?.user?.email) {
+    setNewTicket((t) => ({
+      ...t,
+      userEmail: session.user.email,
+    }));
+
+    loadTickets(session.user.email);
+  }
+  }, [status, session, router]);
+
 
   async function loadTickets(email) {
     if (!email) return;
