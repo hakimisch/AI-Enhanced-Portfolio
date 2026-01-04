@@ -6,7 +6,15 @@ import ProductList from "@/app/e-commerce/ProductList";
 import { Range } from "react-range";
 
 export default function ProductBrowser({ initialProducts }) {
-  const [products, setProducts] = useState(initialProducts);
+  // --- Sort helper (Newest → Oldest) ---
+  const sortNewestFirst = (products) =>
+    [...products].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+  const [products, setProducts] = useState(
+    sortNewestFirst(initialProducts || [])
+  );
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [priceRange, setPriceRange] = useState([0, 0]);
@@ -20,7 +28,7 @@ export default function ProductBrowser({ initialProducts }) {
     priceRange,
   });
 
-  // --- Debounce ---
+  // --- Debounce filters ---
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedFilters({ search, category, priceRange });
@@ -29,7 +37,7 @@ export default function ProductBrowser({ initialProducts }) {
     return () => clearTimeout(handler);
   }, [search, category, priceRange]);
 
-  // --- Fetch filtered products ---
+  // --- Fetch filtered products (sorted newest first) ---
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -45,7 +53,8 @@ export default function ProductBrowser({ initialProducts }) {
 
         const res = await fetch(`/api/products?${params.toString()}`);
         const data = await res.json();
-        setProducts(data);
+
+        setProducts(sortNewestFirst(data));
       } catch (err) {
         console.error("Error fetching products", err);
       } finally {
@@ -54,18 +63,22 @@ export default function ProductBrowser({ initialProducts }) {
     };
 
     fetchProducts();
-  }, [debouncedFilters]);
+  }, [debouncedFilters, maxPrice]);
 
   // --- Load categories + max price ---
   useEffect(() => {
     const loadInitialData = async () => {
       try {
         const res = await fetch("/api/products");
-        const all = await res.json();
+        const all = sortNewestFirst(await res.json());
 
         setCategories([...new Set(all.map((p) => p.category))]);
 
-        const max = all.length > 0 ? Math.ceil(Math.max(...all.map((p) => p.price))) : 500;
+        const max =
+          all.length > 0
+            ? Math.ceil(Math.max(...all.map((p) => p.price)))
+            : 500;
+
         setMaxPrice(max);
         setPriceRange([0, max]);
       } catch (err) {
@@ -84,24 +97,25 @@ export default function ProductBrowser({ initialProducts }) {
 
   return (
     <div className="w-full">
-
-      {/* FILTER BAR - upgraded, polished, aesthetic */}
-      <div className="
-        mb-10 p-6 rounded-2xl relative overflow-hidden 
-        border border-gray-200 
-        shadow-[0_4px_30px_rgba(0,0,0,0.05)]
-        bg-white/70 backdrop-blur-xl
-      ">
-
+      {/* FILTER BAR */}
+      <div
+        className="
+          mb-10 p-6 rounded-2xl relative overflow-hidden 
+          border border-gray-200 
+          shadow-[0_4px_30px_rgba(0,0,0,0.05)]
+          bg-white/70 backdrop-blur-xl
+        "
+      >
         {/* Glow accents */}
         <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-200/40 rounded-full blur-3xl" />
         <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-pink-200/40 rounded-full blur-3xl" />
-        
-        <div className="relative grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
 
+        <div className="relative grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
           {/* Search */}
           <div className="flex flex-col">
-            <label className="text-sm text-gray-700 font-medium mb-1">Search</label>
+            <label className="text-sm text-gray-700 font-medium mb-1">
+              Search
+            </label>
             <input
               type="text"
               placeholder="Search products..."
@@ -119,7 +133,9 @@ export default function ProductBrowser({ initialProducts }) {
 
           {/* Category */}
           <div className="flex flex-col">
-            <label className="text-sm text-gray-700 font-medium mb-1">Category</label>
+            <label className="text-sm text-gray-700 font-medium mb-1">
+              Category
+            </label>
             <select
               className="
                 border border-gray-300 p-3 rounded-xl 
@@ -162,8 +178,13 @@ export default function ProductBrowser({ initialProducts }) {
                       <div
                         className="h-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
                         style={{
-                          marginLeft: `${(priceRange[0] / maxPrice) * 100}%`,
-                          width: `${((priceRange[1] - priceRange[0]) / maxPrice) * 100}%`,
+                          marginLeft: `${
+                            (priceRange[0] / maxPrice) * 100
+                          }%`,
+                          width: `${
+                            ((priceRange[1] - priceRange[0]) / maxPrice) *
+                            100
+                          }%`,
                         }}
                       />
                       {children}
@@ -177,8 +198,7 @@ export default function ProductBrowser({ initialProducts }) {
                         {...thumbProps}
                         className="
                           h-5 w-5 bg-white border border-purple-500 
-                          rounded-full shadow 
-                          
+                          rounded-full shadow
                         "
                       />
                     );
@@ -205,7 +225,6 @@ export default function ProductBrowser({ initialProducts }) {
               Reset
             </button>
           </div>
-
         </div>
       </div>
 

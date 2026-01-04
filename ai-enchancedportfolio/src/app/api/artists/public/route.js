@@ -11,20 +11,27 @@ const connectToDb = async () => {
 export async function GET() {
   await connectToDb();
 
-  // 🔹 Get all artists (those who have uploaded at least one artwork)
-  const artworks = await Artwork.find().lean();
+  // 🔹 Get all artworks sorted newest → oldest
+  const artworks = await Artwork.find()
+    .sort({ createdAt: -1 }) // ✅ KEY FIX
+    .lean();
+
+  // 🔹 Get unique artist emails
   const artistEmails = [...new Set(artworks.map((a) => a.artistEmail))];
 
   const artists = await User.find({ email: { $in: artistEmails } })
     .select("username email profileImage aboutMe")
     .lean();
 
-  // 🔹 Match one artwork sample for preview
+  // 🔹 Match LATEST artwork per artist
   const enrichedArtists = artists.map((artist) => {
-    const sampleArt = artworks.find((a) => a.artistEmail === artist.email);
+    const latestArt = artworks.find(
+      (a) => a.artistEmail === artist.email
+    );
+
     return {
       ...artist,
-      sampleArt: sampleArt?.imageUrl || null,
+      sampleArt: latestArt?.imageUrl || null,
     };
   });
 

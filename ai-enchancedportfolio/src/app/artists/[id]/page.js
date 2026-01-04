@@ -19,6 +19,12 @@ export default async function ArtistProfile(props) {
   const artist = await User.findOne({ email }).lean();
   if (!artist) return notFound();
 
+  const hasSocialLinks =
+  artist.socialLinks &&
+  Object.values(artist.socialLinks).some(
+    (link) => typeof link === "string" && link.trim() !== ""
+  );
+
   const artworks = await Artwork.find({
     $or: [{ artistEmail: artist.email }, { userEmail: artist.email }],
   })
@@ -121,39 +127,44 @@ export default async function ArtistProfile(props) {
       {/* SOCIAL LINKS + ACTION BUTTONS */}
       <div className="flex flex-wrap items-center gap-4 mb-10">
 
-        {/* SOCIAL BUTTONS */}
-        {artist.socialLinks?.instagram && (
-          <a
-            href={artist.socialLinks.instagram}
-            target="_blank"
-            rel="noreferrer"
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow hover:shadow-lg hover:-translate-y-1 transition-all"
-          >
-            Instagram
-          </a>
+        {/* SOCIAL BUTTONS (only render if data exists) */}
+        {hasSocialLinks && (
+          <div className="flex flex-wrap gap-3">
+            {artist.socialLinks?.instagram && (
+              <a
+                href={artist.socialLinks.instagram}
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow hover:shadow-lg hover:-translate-y-1 transition-all"
+              >
+                Instagram
+              </a>
+            )}
+
+            {artist.socialLinks?.twitter && (
+              <a
+                href={artist.socialLinks.twitter}
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow hover:shadow-lg hover:-translate-y-1 transition-all"
+              >
+                Twitter
+              </a>
+            )}
+
+            {artist.socialLinks?.website && (
+              <a
+                href={artist.socialLinks.website}
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 rounded-full bg-gray-900 text-white shadow hover:shadow-lg hover:-translate-y-1 transition-all"
+              >
+                Website
+              </a>
+            )}
+          </div>
         )}
 
-        {artist.socialLinks?.twitter && (
-          <a
-            href={artist.socialLinks.twitter}
-            target="_blank"
-            rel="noreferrer"
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow hover:shadow-lg hover:-translate-y-1 transition-all"
-          >
-            Twitter
-          </a>
-        )}
-
-        {artist.socialLinks?.website && (
-          <a
-            href={artist.socialLinks.website}
-            target="_blank"
-            rel="noreferrer"
-            className="px-4 py-2 rounded-full bg-gray-900 text-white shadow hover:shadow-lg hover:-translate-y-1 transition-all"
-          >
-            Website
-          </a>
-        )}
 
         {/* CV + CONTACT */}
         <div className="ml-auto flex gap-3">
