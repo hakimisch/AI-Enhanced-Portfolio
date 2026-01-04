@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }) {
     { href: "/artist/blog", label: "Blog / Events", icon: <BookOpen size={20} /> },
     { href: "/artist/profile", label: "Profile", icon: <User size={20} /> },
     { href: "/artist/contact", label: "Contacts", icon: <Wrench size={20} /> },
-    { href: "/artist/contact", label: "Home", icon: <Home size={20} /> },
+    { href: "/", label: "Home", icon: <Home size={20} /> },
   ];
 
   const adminLinks = [
@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }) {
     { href: "/admin/chatbot", label: "Chatbot", icon: <TextQuote size={20} /> },
     { href: "/admin/hero", label: "Hero Settings", icon: <Settings size={20} /> },
     { href: "/admin/support", label: "Support", icon: <Wrench size={20} /> },
-    { href: "/artist/contact", label: "Home", icon: <Home size={20} /> },
+    { href: "/", label: "Home", icon: <Home size={20} /> },
   ];
 
   const links = isAdmin ? adminLinks : artistLinks;
