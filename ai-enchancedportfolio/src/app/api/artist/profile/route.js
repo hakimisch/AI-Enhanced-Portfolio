@@ -22,23 +22,22 @@ export async function PUT(req) {
   if (!session?.user) return new Response("Unauthorized", { status: 401 });
 
   const formData = await req.formData();
-  const aboutMe = formData.get("aboutMe");
-  const instagram = formData.get("instagram");
-  const twitter = formData.get("twitter");
-  const website = formData.get("website");
+
+  const aboutMe = formData.get("aboutMe") || "";
+  const instagram = formData.get("instagram") || "";
+  const twitter = formData.get("twitter") || "";
+  const website = formData.get("website") || "";
+  const removeCv = formData.get("removeCv") === "true";
 
   const file = formData.get("profileImage");
-  const cvFile = formData.get("cvFile"); // <-- NEW
+  const cvFile = formData.get("cvFile");
 
-  let imageUrl = null;
-  let cvUrl = null;
+  let imageUrl;
+  let cvUrl;
 
-  // --------------------------
-  // Upload PROFILE IMAGE
-  // --------------------------
+  /* ---------------- PROFILE IMAGE ---------------- */
   if (file && file.size > 0) {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const buffer = Buffer.from(await file.arrayBuffer());
 
     const uploaded = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
@@ -51,46 +50,39 @@ export async function PUT(req) {
     imageUrl = uploaded.secure_url;
   }
 
-  // --------------------------
-  // Upload CV (PDF)
-  // --------------------------
-
+  /* ---------------- CV UPLOAD ---------------- */
   if (cvFile && cvFile.size > 0) {
-  const arrayBuffer = await cvFile.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+    const buffer = Buffer.from(await cvFile.arrayBuffer());
 
-  const uploadedCV = await new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: "artist-cv",
-        resource_type: "raw",
-        type: "upload",
-        access_mode: "public",
-        public_id: cvFile.name.replace(/\.[^/.]+$/, ""), 
-        filename_override: cvFile.name,                   
-        format: "pdf",                                    
-      },
-      (err, result) => (err ? reject(err) : resolve(result))
-    );
+    const uploadedCV = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "artist-cv",
+          resource_type: "raw",
+          format: "pdf",
+        },
+        (err, result) => (err ? reject(err) : resolve(result))
+      );
 
-    Readable.from(buffer).pipe(stream);
-  });
+      Readable.from(buffer).pipe(stream);
+    });
 
     cvUrl = uploadedCV.secure_url;
-  }  
+  }
 
-  // --------------------------
-  // Update database
-  // --------------------------
+  /* ---------------- DATABASE UPDATE ---------------- */
   const updated = await User.findOneAndUpdate(
     { email: session.user.email },
     {
-      ...(aboutMe && { aboutMe }),
-      ...(instagram && { "socialLinks.instagram": instagram }),
-      ...(twitter && { "socialLinks.twitter": twitter }),
-      ...(website && { "socialLinks.website": website }),
+      aboutMe,
+      socialLinks: {
+        instagram,
+        twitter,
+        website,
+      },
       ...(imageUrl && { profileImage: imageUrl }),
-      ...(cvUrl && { cvUrl }), // <-- NEW FIELD SAVED
+      ...(cvUrl && { cvUrl }),
+      ...(removeCv && { cvUrl: "" }),
     },
     { new: true }
   );

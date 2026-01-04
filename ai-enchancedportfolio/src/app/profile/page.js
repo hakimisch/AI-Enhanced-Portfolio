@@ -2,7 +2,6 @@
 "use client";
 
 import Navbar from "components/Navbar";
-
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 
@@ -37,78 +36,76 @@ export default function ProfilePage() {
       });
 
       const data = await res.json();
-      if (data.success) {
-        setMessage("✅ Profile updated successfully!");
-      } else {
-        setMessage("❌ Failed to update profile.");
-      }
-    } catch (err) {
-      console.error(err);
+      setMessage(
+        data.success
+          ? "✅ Profile updated successfully!"
+          : "❌ Failed to update profile."
+      );
+    } catch {
       setMessage("❌ An error occurred.");
     }
   };
 
   if (status === "loading") return <p className="p-8">Loading...</p>;
-
-  if (!session) {
-    return (
-      <div className="p-8 text-center">
-        <p>You must be logged in to view this page.</p>
-      </div>
-    );
-  }
+  if (!session) return <p className="p-8 text-center">Please log in.</p>;
 
   return (
-    <div >
-        <Navbar />
-        <div className="max-w-lg mx-auto mt-10 p-6 border rounded-lg bg-white shadow">
-      <h1 className="text-2xl font-semibold mb-6 text-center">My Profile</h1>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 flex justify-center items-start pt-16">
+        <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg p-8">
+          <h1 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">
+            My Profile
+          </h1>
 
-      <form onSubmit={handleUpdate} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Username</label>
-          <input
-            type="text"
-            value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
-            className="mt-1 w-full p-2 border rounded"
-            required
-          />
+          <form onSubmit={handleUpdate} className="space-y-5">
+            <Input
+              label="Username"
+              value={form.username}
+              onChange={(v) => setForm({ ...form, username: v })}
+            />
+            <Input
+              label="Email"
+              type="email"
+              value={form.email}
+              onChange={(v) => setForm({ ...form, email: v })}
+            />
+            <Input
+              label="New Password (optional)"
+              type="password"
+              placeholder="Leave blank to keep current password"
+              value={form.password}
+              onChange={(v) => setForm({ ...form, password: v })}
+            />
+
+            <button className="w-full py-3 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
+              Update Profile
+            </button>
+          </form>
+
+          {message && (
+            <p className="mt-4 text-center text-sm text-gray-600">{message}</p>
+          )}
         </div>
+      </div>
+    </>
+  );
+}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="mt-1 w-full p-2 border rounded"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">New Password (optional)</label>
-          <input
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="mt-1 w-full p-2 border rounded"
-            placeholder="Leave blank to keep current password"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          Update Profile
-        </button>
-      </form>
-
-      {message && <p className="mt-4 text-center text-gray-700">{message}</p>}
+/* ---------- Reusable Input ---------- */
+function Input({ label, value, onChange, type = "text", placeholder }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-1">
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full p-3 rounded-xl bg-gray-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+      />
     </div>
-    </div>
-    
   );
 }

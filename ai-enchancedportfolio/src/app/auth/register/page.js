@@ -6,109 +6,93 @@ import { useState } from "react";
 import Navbar from "components/Navbar";
 
 export default function Register() {
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [form, setForm] = useState({
+    email: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    if (password !== confirmPassword) {
+    if (form.password !== form.confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, username, password }),
-      });
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
 
+    if (res.ok) {
+      setSuccess(true);
+    } else {
       const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Failed to register");
-        setSuccess(false);
-      } else {
-        setSuccess(true);
-        setError("");
-      }
-    } catch (err) {
-      setError("Something went wrong");
+      setError(data.error || "Registration failed");
     }
   };
 
   return (
-    <div>
+    <>
       <Navbar />
-    <div className="min-h-screen flex justify-center items-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
-        <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">Register</h2>
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        {success && <p className="text-green-500 text-sm mb-4">Registration successful!</p>}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="username" className="block text-gray-700">Username</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-gray-700">Email</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="password" className="block text-gray-700">Password</label>
-            <input
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+          <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">
+            Create Account
+          </h2>
+
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+          {success && (
+            <p className="text-green-600 text-sm mb-4">
+              Registration successful!
+            </p>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input label="Username" onChange={(v) => setForm({ ...form, username: v })} />
+            <Input label="Email" type="email" onChange={(v) => setForm({ ...form, email: v })} />
+            <Input label="Password" type="password" onChange={(v) => setForm({ ...form, password: v })} />
+            <Input
+              label="Confirm Password"
               type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+              onChange={(v) => setForm({ ...form, confirmPassword: v })}
             />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="confirmPassword" className="block text-gray-700">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Register
-          </button>
-        </form>
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            Already have an account? <a href="/auth/login" className="text-blue-500 hover:underline">Login here</a>
+
+            <button className="w-full py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition">
+              Register
+            </button>
+          </form>
+
+          <p className="text-sm text-center text-gray-600 mt-6">
+            Already have an account?{" "}
+            <a href="/auth/login" className="text-blue-600 hover:underline">
+              Login
+            </a>
           </p>
         </div>
       </div>
-    </div>
+    </>
+  );
+}
+
+function Input({ label, type = "text", onChange }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-1">
+        {label}
+      </label>
+      <input
+        type={type}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full p-3 rounded-xl bg-gray-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+        required
+      />
     </div>
   );
 }

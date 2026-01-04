@@ -19,6 +19,8 @@ export default function ArtistProfilePage() {
   const [cvFile, setCvFile] = useState(null);
   const [cvName, setCvName] = useState("");
 
+  const [removeCv, setRemoveCv] = useState(false);
+
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -28,7 +30,11 @@ export default function ArtistProfilePage() {
 
       setProfile(data);
       setAboutMe(data.aboutMe || "");
-      setSocials(data.socialLinks || {});
+      setSocials({
+        instagram: data.socialLinks?.instagram || "",
+        twitter: data.socialLinks?.twitter || "",
+        website: data.socialLinks?.website || "",
+      });
       setImagePreview(data.profileImage || "");
       setCvName(data.cvUrl ? "Uploaded CV" : "");
     }
@@ -45,6 +51,7 @@ export default function ArtistProfilePage() {
     formData.append("instagram", socials.instagram);
     formData.append("twitter", socials.twitter);
     formData.append("website", socials.website);
+    formData.append("removeCv", removeCv);
 
     if (file) formData.append("profileImage", file);
     if (cvFile) formData.append("cvFile", cvFile);
@@ -183,14 +190,28 @@ export default function ArtistProfilePage() {
                 )}
 
                 {profile?.cvUrl && (
-                  <a
-                    href={profile.cvUrl}
-                    target="_blank"
-                    className="text-blue-600 underline hover:text-blue-800 text-sm"
-                  >
-                    Download Current CV
-                  </a>
+                  <div className="flex items-center gap-3">
+                    <a
+                      href={profile.cvUrl}
+                      target="_blank"
+                      className="text-blue-600 underline hover:text-blue-800 text-sm"
+                    >
+                      Download Current CV
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRemoveCv(true);
+                        setCvName("");
+                      }}
+                      className="text-red-600 text-sm hover:underline"
+                    >
+                      Remove CV
+                    </button>
+                  </div>
                 )}
+
               </div>
             </div>
 

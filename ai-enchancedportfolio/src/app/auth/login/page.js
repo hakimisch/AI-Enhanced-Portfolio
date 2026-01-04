@@ -14,70 +14,64 @@ export default function Login() {
   const router = useRouter();
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+    e.preventDefault();
+    setError("");
 
-  const res = await signIn("credentials", {
-    redirect: false,
-    email,
-    password,
-  });
+    const res = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
 
-  console.log("signIn response:", res); // <-- See error reason
-
-  if (res.error) {
-    setError(res.error); // You can customize based on the error message
-  } else {
-    router.push("/admin");
-  }
-};
+    if (res.error) setError(res.error);
+    else router.push("/");
+  };
 
   return (
-    <div>
+    <>
       <Navbar />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+          <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">
+            Welcome Back
+          </h2>
 
-    
-    <div className="min-h-screen flex justify-center items-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
-        <h2 className="text-2xl font-semibold mb-4 text-center text-gray-800">Login</h2>
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-gray-700">Email</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="password" className="block text-gray-700">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Login
-          </button>
-        </form>
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            Don&apos;t have an account? <a href="/auth/register" className="text-blue-500 hover:underline">Register here</a>
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input label="Email" type="email" value={email} setValue={setEmail} />
+            <Input label="Password" type="password" value={password} setValue={setPassword} />
+
+            <button className="w-full py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition">
+              Login
+            </button>
+          </form>
+
+          <p className="text-sm text-center text-gray-600 mt-6">
+            Don’t have an account?{" "}
+            <a href="/auth/register" className="text-blue-600 hover:underline">
+              Register
+            </a>
           </p>
         </div>
       </div>
-    </div>
+    </>
+  );
+}
+
+function Input({ label, type, value, setValue }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-1">
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        className="w-full p-3 rounded-xl bg-gray-50 shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+        required
+      />
     </div>
   );
 }

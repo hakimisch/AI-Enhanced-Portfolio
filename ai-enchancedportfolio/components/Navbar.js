@@ -71,8 +71,14 @@ export default function Navbar() {
 /* ---------------- Sub Components ---------------- */
 
 function NavLinks({ status, isAdmin, isArtist, handleLogout, mobile }) {
-  const base = "text-gray-700 hover:text-blue-500";
+  const base = "text-gray-700 hover:text-blue-500 transition";
   const spacing = mobile ? "py-2" : "";
+
+  const adminStyle =
+    "text-blue-600 font-semibold hover:text-blue-700";
+
+  const artistStyle =
+    "font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text hover:opacity-80";
 
   return (
     <>
@@ -82,12 +88,24 @@ function NavLinks({ status, isAdmin, isArtist, handleLogout, mobile }) {
       <Link href="/e-commerce" className={`${base} ${spacing}`}>Merchandise</Link>
       <Link href="/e-commerce/orders" className={`${base} ${spacing}`}>My Orders</Link>
 
+      {/* Artist Dashboard */}
       {isArtist && (
-        <Link href="/artist" className={`${base} ${spacing}`}>Artist</Link>
+        <Link
+          href="/artist"
+          className={`${artistStyle} ${spacing}`}
+        >
+          Artist Dashboard
+        </Link>
       )}
 
+      {/* Admin Dashboard */}
       {isAdmin && (
-        <Link href="/admin" className={`${base} ${spacing}`}>Admin</Link>
+        <Link
+          href="/admin"
+          className={`${adminStyle} ${spacing}`}
+        >
+          Admin Dashboard
+        </Link>
       )}
 
       <Link href="/contact/support" className={`${base} ${spacing}`}>Support</Link>
@@ -95,7 +113,10 @@ function NavLinks({ status, isAdmin, isArtist, handleLogout, mobile }) {
       {status === "authenticated" ? (
         <>
           <Link href="/profile" className={`${base} ${spacing}`}>Profile</Link>
-          <button onClick={handleLogout} className={`${base} text-left ${spacing}`}>
+          <button
+            onClick={handleLogout}
+            className={`${base} text-left ${spacing}`}
+          >
             Logout
           </button>
         </>
