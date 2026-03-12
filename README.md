@@ -25,13 +25,13 @@ Visit the site to explore the full platform including the artist portfolio, artw
 ## Artist Dashboard
 ![Dashboard](ai-enhancedportfolio/screenshots/Dashboard.png)
 
-## Store
+## Merchandise 
 ![Shop](ai-enhancedportfolio/screenshots/Shop.png)
 
 ## Chatbot
 ![Chatbot](ai-enhancedportfolio/screenshots/Chatbot.png)
 
-## Settings
+## Chatbot Settings
 ![Settings](ai-enhancedportfolio/screenshots/Setting.png)
 
 
