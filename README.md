@@ -17,22 +17,34 @@ Visit the site to explore the full platform including the artist portfolio, artw
 # Screenshots
 
 ## Homepage
-![Homepage](ai-enhancedportfolio/screenshots/Homepage.png)
+![Homepage](ai-enchancedportfolio/screenshots/Homepage.png)
+
+
 
 ## Artwork Gallery
-![Artwork](ai-enhancedportfolio/screenshots/Artwork.png)
+![Artwork](ai-enchancedportfolio/screenshots/Artwork.png)
+
+
 
 ## Artist Dashboard
-![Dashboard](ai-enhancedportfolio/screenshots/Dashboard.png)
+![Dashboard](ai-enchancedportfolio/screenshots/Dashboard.png)
+
+
 
 ## Merchandise 
-![Shop](ai-enhancedportfolio/screenshots/Shop.png)
+![Shop](ai-enchancedportfolio/screenshots/Shop.png)
+
+
 
 ## Chatbot
-![Chatbot](ai-enhancedportfolio/screenshots/Chatbot.png)
+![Chatbot](ai-enchancedportfolio/screenshots/Chatbot.png)
+
+
 
 ## Chatbot Settings
-![Settings](ai-enhancedportfolio/screenshots/Setting.png)
+![Settings](ai-enchancedportfolio/screenshots/Setting.png)
+
+
 
 
 # Features
