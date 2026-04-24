@@ -16,12 +16,12 @@ Visit the site to explore the full platform including the artist portfolio, artw
 
 | | |
 |---|---|
-| **Homepage** | ![](public/homepage.png) |
-| **Artwork Gallery** | ![](public/artwork.png) |
-| **Artist Dashboard** | ![](public/dashboard.png) |
-| **Merchandise** | ![](public/shop.png) |
-| **Chatbot** | ![](public/chatbot.png) |
-| **Chatbot Settings** | ![](public/settings.png) |
+| **Homepage** | ![](screenshots/homepage.png) |
+| **Artwork Gallery** | ![](screenshots/artwork.png) |
+| **Artist Dashboard** | ![](screenshots/dashboard.png) |
+| **Merchandise** | ![](screenshots/shop.png) |
+| **Chatbot** | ![](screenshots/chatbot.png) |
+| **Chatbot Settings** | ![](screenshots/settings.png) |
 
 ## Features
 
